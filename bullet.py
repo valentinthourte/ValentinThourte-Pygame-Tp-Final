@@ -7,11 +7,12 @@ from collision_helper import CollisionHelper
 
 class Bullet():
     
-    def __init__(self,owner,x_init,y_init,x_end,y_end,speed,path,frame_rate_ms,move_rate_ms,width=5,height=5) -> None:
+    def __init__(self,owner,x_init,y_init,x_end,y_end,speed,path,frame_rate_ms,move_rate_ms, flip, width=5,height=5) -> None:
         self.tiempo_transcurrido_move = 0
         self.tiempo_transcurrido_animation = 0
         self.image = pygame.image.load(path).convert_alpha()
         self.image = pygame.transform.scale(self.image,(width,height))
+        self.image = pygame.transform.flip(self.image, flip, False)
         self.rect = self.image.get_rect()
         self.x = x_init
         self.y = y_init

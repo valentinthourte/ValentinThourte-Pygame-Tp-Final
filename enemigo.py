@@ -5,10 +5,12 @@ from particle import ParticleList
 from collision_helper import CollisionHelper
 from animatable import Animatable
 from killable import Killable
+from attacker import Attacker
 
-class Enemy(Animatable, Killable):
+class Enemy(Attacker, Animatable, Killable):
     
     def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100) -> None:
+        super().__init__
         self.walk_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/WALK/WALK_00{0}.png",0,7,scale=p_scale)
         self.walk_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/WALK/WALK_00{0}.png",0,7,flip=True,scale=p_scale)
         self.stay_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/IDLE/IDLE_00{0}.png",0,7,scale=p_scale)
@@ -109,7 +111,7 @@ class Enemy(Animatable, Killable):
     def do_animation(self,delta_ms):
         if self.is_dead and self.animation_ended():
             print("Enemy dead and animation ended.")
-            self.owner.kill(self)
+            self.owner.kill_enemy(self)
         else:
             if self.is_dead:
                 self.animation = self.die
@@ -121,10 +123,10 @@ class Enemy(Animatable, Killable):
                 else: 
                     self.frame = 0
 
-    def update(self,delta_ms,plataform_list, player):
+    def update(self,delta_ms,plataform_list, player_list):
         if not self.died():
             self.do_movement(delta_ms,plataform_list)
-            self.check_collision(player)
+            self.check_collision(player_list)
         
         self.do_animation(delta_ms) 
 
@@ -146,16 +148,17 @@ class Enemy(Animatable, Killable):
             self.frame = 0
             self.animation = self.die
     
-    def check_collision(self, player):
-        if CollisionHelper.player_colliding_with_entity(player, self):
-            self.animation = self.get_animation_by_direction()
-            if not self.is_knife:
-                self.is_knife = True
-                player.receive_shoot()
-        else:
-            self.is_knife = False
+    def check_collision(self, player_list):
+        for player in player_list:
+            if CollisionHelper.player_colliding_with_entity(player, self):
+                self.animation = self.get_attack_animation_by_direction()
+                if not self.is_knife and self.can_shoot_again():
+                    self.is_knife = True
+                    player.receive_shoot()
+            else:
+                self.is_knife = False
             
-    def get_animation_by_direction(self):
+    def get_attack_animation_by_direction(self):
         animation = self.knife_l
         if self.direction == DIRECTION_R:
             animation = self.knife_r

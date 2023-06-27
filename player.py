@@ -5,22 +5,25 @@ from auxiliar import Auxiliar
 from animatable import Animatable
 from killable import Killable
 from particle import ParticleList
-class Player(Animatable, Killable):
-    def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100) -> None:
-        '''
-        self.walk_r = Auxiliar.getSurfaceFromSpriteSheet("images/caracters/stink/walk.png",15,1,scale=p_scale)[:12]
-        '''
-        self.stay_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Idle ({0}).png",1,10,flip=False,scale=p_scale)
-        self.stay_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Idle ({0}).png",1,10,flip=True,scale=p_scale)
-        self.jump_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Jump ({0}).png",1,10,flip=False,scale=p_scale)
-        self.jump_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Jump ({0}).png",1,10,flip=True,scale=p_scale)
-        self.walk_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Run ({0}).png",1,8,flip=False,scale=p_scale)
-        self.walk_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Run ({0}).png",1,8,flip=True,scale=p_scale)
-        self.shoot_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Shoot ({0}).png",1,3,flip=False,scale=p_scale,repeat_frame=2)
-        self.shoot_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Shoot ({0}).png",1,3,flip=True,scale=p_scale,repeat_frame=2)
-        self.knife_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Melee ({0}).png",1,7,flip=False,scale=p_scale,repeat_frame=1)
-        self.knife_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Melee ({0}).png",1,7,flip=True,scale=p_scale,repeat_frame=1)
-        self.die = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/players/cowgirl/Dead ({0}).png",1,10,flip=False,scale=p_scale,repeat_frame=1)
+from attacker import Attacker
+
+class Player(Attacker, Animatable, Killable):
+    def __init__(self,id,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100) -> None:
+        super().__init__
+
+        self.id = id
+
+        self.stay_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Idle ({0}).png",1,10,flip=False,scale=p_scale)
+        self.stay_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Idle ({0}).png",1,10,flip=True,scale=p_scale)
+        self.jump_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Jump ({0}).png",1,10,flip=False,scale=p_scale)
+        self.jump_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Jump ({0}).png",1,10,flip=True,scale=p_scale)
+        self.walk_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Run ({0}).png",1,8,flip=False,scale=p_scale)
+        self.walk_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Run ({0}).png",1,8,flip=True,scale=p_scale)
+        self.shoot_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Shoot ({0}).png",1,3,flip=False,scale=p_scale,repeat_frame=2)
+        self.shoot_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Shoot ({0}).png",1,3,flip=True,scale=p_scale,repeat_frame=2)
+        self.knife_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Melee ({0}).png",1,7,flip=False,scale=p_scale,repeat_frame=1)
+        self.knife_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Melee ({0}).png",1,7,flip=True,scale=p_scale,repeat_frame=1)
+        self.die = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Dead ({0}).png",1,10,flip=False,scale=p_scale,repeat_frame=1)
 
         self.particle_list = ParticleList(self)
 
@@ -64,7 +67,7 @@ class Player(Animatable, Killable):
         self.recieved_shot = True
 
         self.owner = owner
-        self.last_shot_time = 0
+        self.player_keys = player_keys
 
     def walk(self,direction):
         if(self.is_jump == False and self.is_fall == False):
@@ -96,7 +99,7 @@ class Player(Animatable, Killable):
                 bullet_end_coords = self.get_bullet_end_coords_from_direction()
                 bullet_x_end = bullet_end_coords[0]
                 bullet_y_end = bullet_end_coords[1]
-                self.owner.player_shoot(Bullet(self,self.rect.centerx,self.rect.centery,bullet_x_end,bullet_y_end,20,path=PATH_USER_BULLET,frame_rate_ms=100,move_rate_ms=20,width=32,height=32))
+                self.owner.player_shoot(Bullet(self,self.rect.centerx,self.rect.centery,bullet_x_end,bullet_y_end,20,path=PATH_USER_BULLET,frame_rate_ms=100,move_rate_ms=20, flip=self.direction == DIRECTION_L,width=32,height=32))
                 
     def receive_shoot(self):
         self.lives -= 1
@@ -118,7 +121,8 @@ class Player(Animatable, Killable):
                 colliding_enemies = self.owner.get_colliding_enemies(self)
                 if (len(colliding_enemies) > 0):
                     for enemy in colliding_enemies:
-                        enemy.receive_shoot()
+                        if not enemy.died():
+                            enemy.receive_shoot()
                 
 
     def jump(self,on_off = True):
@@ -226,32 +230,32 @@ class Player(Animatable, Killable):
 
     def events(self,delta_ms,keys):
         self.tiempo_transcurrido += delta_ms
-        if(keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT]):
+        if(keys[self.player_keys[LEFT]] and not keys[self.player_keys[RIGHT]]):
             self.walk(DIRECTION_L)
 
-        if(not keys[pygame.K_LEFT] and keys[pygame.K_RIGHT]):
+        if(not keys[self.player_keys[LEFT]] and keys[self.player_keys[RIGHT]]):
             self.walk(DIRECTION_R)
 
-        if(not keys[pygame.K_LEFT] and not keys[pygame.K_RIGHT] and not keys[pygame.K_SPACE]):
+        if(not keys[self.player_keys[LEFT]] and not keys[self.player_keys[RIGHT]] and not keys[self.player_keys[JUMP]]):
             self.stay()
-        if(keys[pygame.K_LEFT] and keys[pygame.K_RIGHT] and not keys[pygame.K_SPACE]):
+        if(keys[self.player_keys[LEFT]] and keys[self.player_keys[RIGHT]] and not keys[self.player_keys[JUMP]]):
             self.stay()  
 
-        if(keys[pygame.K_SPACE]):
+        if(keys[self.player_keys[JUMP]]):
             if((self.tiempo_transcurrido - self.tiempo_last_jump) > self.interval_time_jump):
                 self.jump(True)
                 self.tiempo_last_jump = self.tiempo_transcurrido
 
-        if(not keys[pygame.K_a]):
+        if(not keys[self.player_keys[ATTACK]]):
             self.shoot(False)  
 
-        if(not keys[pygame.K_a]):
+        if(not keys[self.player_keys[ATTACK]]):
             self.knife(False)  
 
-        if(keys[pygame.K_s] and not keys[pygame.K_a]):
-            self.shoot()   
+        if(keys[self.player_keys[SHOOT]] and not keys[self.player_keys[ATTACK]]):
+            self.shoot()     
         
-        if(keys[pygame.K_a] and not keys[pygame.K_s]):
+        if(keys[self.player_keys[ATTACK]] and not keys[self.player_keys[SHOOT]]):
             self.knife()   
                 
 
@@ -261,10 +265,5 @@ class Player(Animatable, Killable):
             coords[0] = ANCHO_VENTANA
         return coords
     
-    def can_shoot_again(self):
-        actual_time = pygame.time.get_ticks()
-        can_shoot = actual_time - self.last_shot_time > 400
-        if can_shoot:
-            self.last_shot_time = actual_time
-        return can_shoot
+
     

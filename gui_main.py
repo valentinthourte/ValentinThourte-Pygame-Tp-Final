@@ -6,7 +6,9 @@ from gui_form import Form
 from gui_form_menu_A import FormMenuA
 from gui_form_menu_B import FormMenuB
 from gui_form_menu_C import FormMenuC
-from gui_form_menu_game_l1 import FormGameLevel1
+from levels.l1.gui_form_menu_game_l1_MP import FormGameLevel1_MP
+from levels.l1.gui_form_menu_game_l1_SP import FormGameLevel1_SP
+
 
 flags = DOUBLEBUF 
 screen = pygame.display.set_mode((ANCHO_VENTANA,ALTO_VENTANA), flags, 16)
@@ -17,7 +19,8 @@ form_menu_A = FormMenuA(name="form_menu_A",master_surface = screen,x=300,y=200,w
 form_menu_B = FormMenuB(name=NAME_FORM_MENU_B,master_surface = screen,x=300,y=200,w=500,h=400,color_background=(0,255,255),color_border=(255,0,255),active=False)
 form_menu_C = FormMenuC(name="form_menu_C",master_surface = screen,x=0,y=0,w=ANCHO_VENTANA,h=ALTO_VENTANA,color_background=(0,255,255),color_border=(255,0,255),active=False)
 
-form_game_L1 = FormGameLevel1(name="form_game_L1",master_surface = screen,x=0,y=0,w=ANCHO_VENTANA,h=ALTO_VENTANA,color_background=(0,255,255),color_border=(255,0,255),active=False)
+form_game_L1_sp = FormGameLevel1_SP(name="form_game_L1_SP",master_surface = screen,x=0,y=0,w=ANCHO_VENTANA,h=ALTO_VENTANA,color_background=(0,255,255),color_border=(255,0,255),active=False)
+form_game_L1_mp = FormGameLevel1_MP(name="form_game_L1_MP",master_surface = screen,x=0,y=0,w=ANCHO_VENTANA,h=ALTO_VENTANA,color_background=(0,255,255),color_border=(255,0,255),active=False)
 
 while True:     
     lista_eventos = pygame.event.get()
@@ -35,14 +38,4 @@ while True:
         aux_form_active.draw()
 
     pygame.display.flip()
-
-
-
-
-
-
-
-  
-
-
 
