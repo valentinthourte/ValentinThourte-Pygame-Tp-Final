@@ -6,11 +6,17 @@ from collision_helper import CollisionHelper
 from animatable import Animatable
 from killable import Killable
 from attacker import Attacker
+from fallable import Fallable
+import random
 
-class Enemy(Attacker, Animatable, Killable):
+class Enemy(Attacker, Animatable, Killable, Fallable):
     
-    def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100) -> None:
-        super().__init__
+    def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100, lives = 100) -> None:
+        Fallable.__init__(self)
+        Attacker.__init__(self)
+        Animatable.__init__(self)
+        Killable.__init__(self, lives)
+
         self.walk_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/WALK/WALK_00{0}.png",0,7,scale=p_scale)
         self.walk_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/WALK/WALK_00{0}.png",0,7,flip=True,scale=p_scale)
         self.stay_r = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/IDLE/IDLE_00{0}.png",0,7,scale=p_scale)
@@ -21,7 +27,7 @@ class Enemy(Attacker, Animatable, Killable):
         
         self.contador = 0
         self.frame = 0
-        self.lives = 5
+        self.lives = lives
         self.score = 0
         self.move_x = 0
         self.move_y = 0
@@ -41,7 +47,6 @@ class Enemy(Attacker, Animatable, Killable):
         self.ground_collition_rect.y = y + self.rect.height - GROUND_COLLIDE_H
 
         self.is_jump = False
-        self.is_fall = False
         self.is_shoot = False
         self.is_knife = False
         self.is_dead = False
@@ -71,46 +76,60 @@ class Enemy(Attacker, Animatable, Killable):
         self.collition_rect.y += delta_y
         self.ground_collition_rect.y += delta_y
 
+    def toggle_direction(self):
+        if self.direction == DIRECTION_R:
+            self.move_x = -self.speed_walk
+            self.animation = self.walk_l
+            self.direction = DIRECTION_L
+        else:
+            self.move_x = self.speed_walk
+            self.animation = self.walk_r
+            self.direction = DIRECTION_R
+
+    def switch_direction(self, direction):
+        if direction == DIRECTION_R:
+            self.direction = DIRECTION_L
+            self.toggle_direction()
+        else:
+            self.direction = DIRECTION_R
+            self.toggle_direction()
+            
+
+    
+    def must_turn_direction(self):
+        number = random.randint(1,100)
+        return number <= 5 or CollisionHelper.is_against_edge(entity=self)
+    
+    def choose_direction(self):
+        number = random.randint(1,2)
+        direction = DIRECTION_R
+        if number == 1:
+            direction = (DIRECTION_L)
+        
+        self.switch_direction(direction)
+
+    def update_grounded(self, plataform_list):
+        was_grounded = self.is_grounded
+        super().update_grounded(plataform_list)
+        if not was_grounded and self.is_grounded:
+            self.choose_direction()
+
     def do_movement(self,delta_ms,plataform_list):
         self.tiempo_transcurrido_move += delta_ms
+        self.update_grounded(plataform_list)
         if(self.tiempo_transcurrido_move >= self.move_rate_ms):
             self.tiempo_transcurrido_move = 0
 
-            if(not self.is_on_plataform(plataform_list)):
-                if(self.move_y == 0):
-                    self.is_fall = True
-                    self.change_y(self.gravity)
-            else:
-                self.is_fall = False
-                self.change_x(self.move_x)
-                if self.contador <= 50:
-                    self.move_x = -self.speed_walk
-                    self.animation = self.walk_l
-                    self.direction = DIRECTION_L
-                    self.contador += 1 
-                elif self.contador <= 100:
-                    self.move_x = self.speed_walk
-                    self.animation = self.walk_r
-                    self.direction = DIRECTION_R
-                    self.contador += 1
-                else:
-                    self.contador = 0
-    
-    def is_on_plataform(self,plataform_list):
-        retorno = False
-        
-        if(self.ground_collition_rect.bottom >= GROUND_LEVEL):
-            retorno = True     
-        else:
-            for plataforma in  plataform_list:
-                if(self.ground_collition_rect.colliderect(plataforma.ground_collition_rect)):
-                    retorno = True
-                    break       
-        return retorno          
+            self.update_gravity()
+
+            self.change_x(self.move_x)
+            self.change_y(self.velocity_y)
+            
+            if self.must_turn_direction():
+                self.toggle_direction()
 
     def do_animation(self,delta_ms):
         if self.is_dead and self.animation_ended():
-            print("Enemy dead and animation ended.")
             self.owner.kill_enemy(self)
         else:
             if self.is_dead:
@@ -140,8 +159,8 @@ class Enemy(Attacker, Animatable, Killable):
         screen.blit(self.image,self.rect)
         self.particle_list.show_particles(screen)
 
-    def receive_shoot(self) -> bool:
-        self.lives -= 1
+    def receive_shoot(self, damage = 1) -> bool:
+        self.lives -= damage 
         self.particle_list.create_hit_particle()
         if self.lives <= 0:
             self.is_dead = True            
@@ -150,11 +169,11 @@ class Enemy(Attacker, Animatable, Killable):
     
     def check_collision(self, player_list):
         for player in player_list:
-            if CollisionHelper.player_colliding_with_entity(player, self):
+            if CollisionHelper.player_colliding_with_entity(player, self) and not player.died():
                 self.animation = self.get_attack_animation_by_direction()
                 if not self.is_knife and self.can_shoot_again():
                     self.is_knife = True
-                    player.receive_shoot()
+                    player.receive_shoot(ENEMY_DAMAGE)
             else:
                 self.is_knife = False
             

@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-from gui_widget import Widget
+from gui.gui_widget import Widget
 from constantes import *
 
 

@@ -1,5 +1,7 @@
 import pygame
 import random
+from constantes import *
+
 class Particle:
     def __init__(self, owner, x, y) -> None:
         self.owner = owner
@@ -42,9 +44,9 @@ class ParticleList:
             particle.show(surface)
 
     def create_hit_particle(self):
-        for i in range(0, 20):
-            PARTICLE_Y_VARIABILITY = 80
-            PARTICLE_X_VARIABILITY = 40
+        for i in range(0, PARTICLE_AMOUNT):
+            PARTICLE_Y_VARIABILITY = self.owner.rect.height // 2
+            PARTICLE_X_VARIABILITY = self.owner.rect.width // 2 
             x = self.owner.rect.center[0] + (random.randint(0, PARTICLE_X_VARIABILITY) - PARTICLE_X_VARIABILITY / 2) 
             y = self.owner.rect.center[1] + (random.randint(0, PARTICLE_Y_VARIABILITY) - PARTICLE_Y_VARIABILITY / 2) 
             self.particle_list.append(Particle(self, x,y))

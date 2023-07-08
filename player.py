@@ -1,15 +1,22 @@
 import pygame
 from bullet import Bullet
+from collision_helper import CollisionHelper
 from constantes import *
 from auxiliar import Auxiliar
 from animatable import Animatable
+from fallable import Fallable
 from killable import Killable
 from particle import ParticleList
 from attacker import Attacker
+from pistol import Pistol
 
-class Player(Attacker, Animatable, Killable):
-    def __init__(self,id,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100) -> None:
-        super().__init__
+class Player(Fallable, Attacker, Animatable, Killable):
+
+    def __init__(self,id,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100, lives = 182) -> None:
+        Fallable.__init__(self)
+        Attacker.__init__(self)
+        Animatable.__init__(self)
+        Killable.__init__(self, lives=lives)
 
         self.id = id
 
@@ -28,12 +35,16 @@ class Player(Attacker, Animatable, Killable):
         self.particle_list = ParticleList(self)
 
         self.frame = 0
-        self.lives = 5
         self.score = 0
         self.move_x = 0
-        self.move_y = 0
-        self.speed_walk =  speed_walk
-        self.speed_run =  speed_run
+
+        self.weapon = Pistol(self)
+        
+        self.velocity_y = 0
+        self.acceleration_y = 0
+
+        self.speed_walk = speed_walk
+        self.speed_run = speed_run
         self.gravity = gravity
         self.jump_power = jump_power
         self.animation = self.stay_r
@@ -47,8 +58,7 @@ class Player(Attacker, Animatable, Killable):
         self.ground_collition_rect.height = GROUND_COLLIDE_H
         self.ground_collition_rect.y = y + self.rect.height - GROUND_COLLIDE_H
 
-        self.is_jump = False
-        self.is_fall = False
+        self.can_jump = True
         self.is_shoot = False
         self.is_knife = False
         self.is_dead = False
@@ -70,25 +80,28 @@ class Player(Attacker, Animatable, Killable):
         self.player_keys = player_keys
 
     def walk(self,direction):
-        if(self.is_jump == False and self.is_fall == False):
-            move_speed = self.speed_walk / 2
-        else:
+        if(self.is_grounded):
             move_speed = self.speed_walk
+        else:
+            move_speed = self.speed_walk // 2
 
         if(self.direction != direction or (self.animation != self.walk_r and self.animation != self.walk_l)):
             self.frame = 0
             self.direction = direction
             if(direction == DIRECTION_R):
-                self.move_x = move_speed
-                self.animation = self.walk_r
+                if not CollisionHelper.is_against_right_edge(self):
+                    self.move_x = move_speed
+                    self.animation = self.walk_r
             else:
-                self.move_x = -move_speed
-                self.animation = self.walk_l
+                
+                if not CollisionHelper.is_against_left_edge(self):
+                    self.move_x = -move_speed
+                    self.animation = self.walk_l
 
     def shoot(self,on_off = True):
         self.is_shoot = on_off
-        if(on_off == True and self.is_jump == False and self.is_fall == False):
-            if(self.animation != self.shoot_r and self.animation != self.shoot_l and self.can_shoot_again()):
+        if(on_off == True and self.is_grounded):
+            if(self.can_shoot_again()):
                 self.frame = 0
                 self.is_shoot = True
                 if(self.direction == DIRECTION_R):
@@ -96,110 +109,114 @@ class Player(Attacker, Animatable, Killable):
                 else:
                     self.animation = self.shoot_l
 
-                bullet_end_coords = self.get_bullet_end_coords_from_direction()
-                bullet_x_end = bullet_end_coords[0]
-                bullet_y_end = bullet_end_coords[1]
-                self.owner.player_shoot(Bullet(self,self.rect.centerx,self.rect.centery,bullet_x_end,bullet_y_end,20,path=PATH_USER_BULLET,frame_rate_ms=100,move_rate_ms=20, flip=self.direction == DIRECTION_L,width=32,height=32))
+
+                self.owner.player_shoot(self.weapon.shoot(self.direction))
                 
-    def receive_shoot(self):
-        self.lives -= 1
+    def receive_shoot(self, damage = 1):
+        self.lives -= damage
         self.particle_list.create_hit_particle()
         if self.died():
-            self.is_dead = True
-            self.frame = 0
-            self.animation = self.die
+            self.on_death()
 
     def knife(self,on_off = True):
         self.is_knife = on_off
-        if(on_off == True and self.is_jump == False and self.is_fall == False):
-            if(self.animation != self.knife_r and self.animation != self.knife_l):
-                self.frame = 0
-                if(self.direction == DIRECTION_R):
-                    self.animation = self.knife_r
-                else:
-                    self.animation = self.knife_l      
-                colliding_enemies = self.owner.get_colliding_enemies(self)
-                if (len(colliding_enemies) > 0):
-                    for enemy in colliding_enemies:
-                        if not enemy.died():
-                            enemy.receive_shoot()
-                
+        if(on_off == True and self.is_grounded):
+            if self.can_shoot_again():
+                if(self.animation != self.knife_r and self.animation != self.knife_l):
+                    self.frame = 0
+                    if(self.direction == DIRECTION_R):
+                        self.animation = self.knife_r
+                    else:
+                        self.animation = self.knife_l      
+                    colliding_enemies = self.owner.get_colliding_enemies(self)
+                    if (len(colliding_enemies) > 0):
+                        for enemy in colliding_enemies:
+                            if not enemy.died():
+                                enemy.receive_shoot()     
 
-    def jump(self,on_off = True):
-        if(on_off and self.is_jump == False and self.is_fall == False):
-            self.y_start_jump = self.rect.y
+    def jump(self):
+        if(self.can_jump):
+            self.jumped = True
+            self.move_x = int(self.move_x / 2)
+            self.velocity_y = -self.jump_power
             if(self.direction == DIRECTION_R):
-                self.move_x = int(self.move_x / 2)
-                self.move_y = -self.jump_power
                 self.animation = self.jump_r
             else:
-                self.move_x = int(self.move_x / 2)
-                self.move_y = -self.jump_power
                 self.animation = self.jump_l
             self.frame = 0
-            self.is_jump = True
-        if(on_off == False):
-            self.is_jump = False
+            self.can_jump = False
+        else:
             self.stay()
 
-    def stay(self):
+    def stay(self, change_animation = True):
         if(self.is_knife or self.is_shoot):
             return
 
-        if(self.animation != self.stay_r and self.animation != self.stay_l):
-            if(self.direction == DIRECTION_R):
-                self.animation = self.stay_r
-            else:
-                self.animation = self.stay_l
-            self.move_x = 0
-            self.move_y = 0
-            self.frame = 0
+        if change_animation:
+            if(self.animation != self.stay_r and self.animation != self.stay_l):
+                if(self.direction == DIRECTION_R):
+                    self.animation = self.stay_r
+                else:
+                    self.animation = self.stay_l
+        self.jumped = False
+        self.move_x = 0
+        self.move_y = 0
+        self.frame = 0
 
     def change_x(self,delta_x):
         self.rect.x += delta_x
         self.collition_rect.x += delta_x
         self.ground_collition_rect.x += delta_x
+    
+    def set_x(self,value):
+        self.rect.x = value
+        self.collition_rect.x = value
+        self.ground_collition_rect.x = value
 
     def change_y(self,delta_y):
         self.rect.y += delta_y
         self.collition_rect.y += delta_y
         self.ground_collition_rect.y += delta_y
 
+    def set_y(self, value):
+        self.rect.y = value
+        self.collition_rect.y = value
+        self.ground_collition_rect.y = value
+
     def do_movement(self,delta_ms,plataform_list):
         self.tiempo_transcurrido_move += delta_ms
+        self.update_grounded(plataform_list)
         if(self.tiempo_transcurrido_move >= self.move_rate_ms):
             self.tiempo_transcurrido_move = 0
+            super().update_gravity()
+            self.update_x_velocity()
 
-            if(abs(self.y_start_jump - self.rect.y) > self.jump_height and self.is_jump):
-                self.move_y = 0
-          
             self.change_x(self.move_x)
-            self.change_y(self.move_y)
+            self.change_y(self.velocity_y)        
+    
+    def picked_up(self, consumable):
+        consumable.effect(self)
 
-            if(not self.is_on_plataform(plataform_list)):
-                if(self.move_y == 0):
-                    self.is_fall = True
-                    self.change_y(self.gravity)
-            else:
-                if (self.is_jump): 
-                    self.jump(False)
-                self.is_fall = False            
+    def heal(self, amount):
+        can_heal = self.lives < self.max_health
+        if can_heal:
+            self.lives += amount
+        return can_heal
 
-    def is_on_plataform(self,plataform_list):
-        retorno = False
-        
-        if(self.ground_collition_rect.bottom >= GROUND_LEVEL):
-            retorno = True     
-        else:
-            for plataforma in  plataform_list:
-                if(self.ground_collition_rect.colliderect(plataforma.ground_collition_rect)):
-                    retorno = True
-                    break       
-        return retorno                 
+    def increase_damage(self, percent):
+        self.weapon.increase_damage(percent)
+
+    def update_x_velocity(self):
+        if self.is_knife or self.is_shoot:
+            self.move_x = 0
+
+    def update_grounded(self, platform_list):
+        super().update_grounded(platform_list)
+        self.can_jump = self.is_grounded
 
     def do_animation(self,delta_ms):
         if self.is_dead and self.animation_ended():
-            print("Dead and animation ended.")
+            pass
         else:
             if self.is_dead:
                 self.animation = self.die
@@ -208,7 +225,6 @@ class Player(Attacker, Animatable, Killable):
                 self.tiempo_transcurrido_animation = 0
                 if(not self.animation_ended()):
                     self.frame += 1 
-                    #print(self.frame)
                 else: 
                     self.frame = 0
     
@@ -218,7 +234,6 @@ class Player(Attacker, Animatable, Killable):
         
     
     def draw(self,screen):
-        
         if(DEBUG):
             pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
             pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
@@ -243,10 +258,10 @@ class Player(Attacker, Animatable, Killable):
 
         if(keys[self.player_keys[JUMP]]):
             if((self.tiempo_transcurrido - self.tiempo_last_jump) > self.interval_time_jump):
-                self.jump(True)
+                self.jump()
                 self.tiempo_last_jump = self.tiempo_transcurrido
 
-        if(not keys[self.player_keys[ATTACK]]):
+        if(not keys[self.player_keys[SHOOT]]):
             self.shoot(False)  
 
         if(not keys[self.player_keys[ATTACK]]):
@@ -257,13 +272,17 @@ class Player(Attacker, Animatable, Killable):
         
         if(keys[self.player_keys[ATTACK]] and not keys[self.player_keys[SHOOT]]):
             self.knife()   
-                
 
-    def get_bullet_end_coords_from_direction(self):
+    def get_bullet_end_coords_from_direction(self, direction):
         coords = [0, self.rect.centery]
         if self.direction == DIRECTION_R:
             coords[0] = ANCHO_VENTANA
         return coords
     
-
+    def on_death(self):
+        self.is_dead = True
+        self.frame = 0
+        self.animation = self.die
+        self.move_x = 0
+        self.move_y = 0
     

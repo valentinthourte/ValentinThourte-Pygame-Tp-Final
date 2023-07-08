@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
-from gui_widget import Widget
-from gui_button import Button
+from gui.gui_widget import Widget
+from gui.gui_button import Button
 
 class Form():
     forms_dict = {}
@@ -22,7 +22,7 @@ class Form():
         self.active = active
         self.x = x
         self.y = y
-
+        self.widget_list = []
         if(self.color_background != None):
             self.surface.fill(self.color_background)
             
@@ -31,7 +31,7 @@ class Form():
         for aux_form in Form.forms_dict.values():
             aux_form.active = False
         Form.forms_dict[name].active = True
-    
+
     @staticmethod
     def get_active():
         for aux_form in Form.forms_dict.values():
@@ -43,11 +43,13 @@ class Form():
         pass
 
     def update(self,lista_eventos):
-        pass
+        for aux_widget in self.widget_list:
+            aux_widget.update(lista_eventos)
 
     def draw(self):
         self.master_surface.blit(self.surface,self.slave_rect)
-
+        for aux_widget in self.widget_list:    
+            aux_widget.draw()
 
 class FormMenu(Form):
     def __init__(self,master_surface,x,y,w,h,color_background,color_border,active):
