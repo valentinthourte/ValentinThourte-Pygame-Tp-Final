@@ -5,7 +5,7 @@ from weapon import Weapon
 
 
 class Pistol(Weapon):
-    def __init__(self, owner, damage=1) -> None:
+    def __init__(self, owner, damage=5) -> None:
         super().__init__(owner, damage)
     
     def shoot(self, direction):

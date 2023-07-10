@@ -4,17 +4,16 @@ from constantes import *
 from fallable import Fallable
 
 class Consumable(Fallable):
-    def __init__(self, x, y, image_path, w, h, owner, frame_rate_ms = 100,move_rate_ms = 50, float_height = 10) -> None:
+    def __init__(self, x, y, image_path, w, h, owner, scale=True,frame_rate_ms = 100,move_rate_ms = 50, float_height = 10) -> None:
         Fallable.__init__(self)
         self.image = pygame.image.load(image_path).convert_alpha()
-        self.image = pygame.transform.scale(self.image, (w,h))
+        if scale:
+            self.image = pygame.transform.scale(self.image, (w,h))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         self.collition_rect = pygame.Rect(x+self.rect.width/3,y,self.rect.width/3,self.rect.height)
-        self.ground_collition_rect = pygame.Rect(self.collition_rect)
-        self.ground_collition_rect.height = GROUND_COLLIDE_H
-        self.ground_collition_rect.y = y + self.rect.height - GROUND_COLLIDE_H
+        Fallable.create_ground_collition_rect(self)
         self.owner = owner
         self.frame_rate_ms = frame_rate_ms 
         self.tiempo_transcurrido_move = 0
@@ -23,6 +22,7 @@ class Consumable(Fallable):
         self.float_interval = 25
         self.last_float_time = 0
         self.going_up = True
+        self.contacting_platform = None
     
     def check_picked_up(self, player_list):
         for player in player_list:
@@ -35,11 +35,14 @@ class Consumable(Fallable):
     def draw(self, screen):
         if(DEBUG):
             pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
+            pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
+        Fallable.draw(self, screen)
         screen.blit(self.image,self.rect)
     
     def update(self, delta_ms, plataform_list):
         self.tiempo_transcurrido_move += delta_ms
-        self.update_grounded(plataform_list)
+        if not self.is_grounded:
+            self.update_grounded(plataform_list)
         if(self.tiempo_transcurrido_move >= self.move_rate_ms):
             self.tiempo_transcurrido_move = 0
             super().update_gravity()
@@ -59,9 +62,9 @@ class Consumable(Fallable):
 
     
     def update_float_direction(self):
-        if self.owner.ground.top - self.rect.y >= self.float_height:
+        if self.contacting_platform.top - self.rect.bottom >= self.float_height:
             self.going_up = False
-        elif self.rect.y >= self.owner.ground.top:
+        elif self.rect.bottom >= self.contacting_platform.top:
             self.going_up = True
     
     def change_y(self,delta_y):
@@ -70,5 +73,10 @@ class Consumable(Fallable):
         self.ground_collition_rect.y += delta_y
     
     def update_grounded(self, platform_list):
+        was_grounded = self.is_grounded
         super().update_grounded(platform_list)
         self.is_grounded = self.is_grounded or CollisionHelper.consumable_must_float(self, self.owner.ground)
+        if self.is_grounded != was_grounded:
+            self.contacting_platform = CollisionHelper.get_contacting_platform_for_entity(self, platform_list, self.owner)
+            if not self.contacting_platform:
+                self.is_grounded = False

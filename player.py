@@ -54,10 +54,7 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.rect.x = x
         self.rect.y = y
         self.collition_rect = pygame.Rect(x+self.rect.width/3,y,self.rect.width/3,self.rect.height)
-        self.ground_collition_rect = pygame.Rect(self.collition_rect)
-        self.ground_collition_rect.height = GROUND_COLLIDE_H
-        self.ground_collition_rect.y = y + self.rect.height - GROUND_COLLIDE_H
-
+        Fallable.create_ground_collition_rect(self)
         self.can_jump = True
         self.is_shoot = False
         self.is_knife = False
@@ -69,6 +66,7 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.move_rate_ms = move_rate_ms
         self.y_start_jump = 0
         self.jump_height = jump_height
+        self.player_color = self.generate_player_color()
 
         self.tiempo_transcurrido = 0
         self.tiempo_last_jump = 0 # en base al tiempo transcurrido general
@@ -78,6 +76,14 @@ class Player(Fallable, Attacker, Animatable, Killable):
 
         self.owner = owner
         self.player_keys = player_keys
+
+    def generate_player_color(self):
+        import random
+        r = random.randint(50, 200)
+        g = random.randint(50, 200)
+        b = random.randint(50, 200)
+        return (r,g,b)
+
 
     def walk(self,direction):
         if(self.is_grounded):
@@ -163,20 +169,25 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.move_y = 0
         self.frame = 0
 
-    def change_x(self,delta_x):
-        self.rect.x += delta_x
-        self.collition_rect.x += delta_x
-        self.ground_collition_rect.x += delta_x
+    def change_x(self, delta_x):
+        new_x = self.rect.x + delta_x
+        if 0 <= new_x <= ANCHO_VENTANA - self.rect.width:
+            self.rect.x += delta_x
+            self.collition_rect.x += delta_x
+            self.ground_collition_rect.x += delta_x
+
+    def change_y(self, delta_y):
+        new_y = self.rect.y + delta_y
+        if 0 <= new_y <= ALTO_VENTANA - self.rect.height:
+            self.rect.y += delta_y
+            self.collition_rect.y += delta_y
+            self.ground_collition_rect.y += delta_y
     
     def set_x(self,value):
         self.rect.x = value
         self.collition_rect.x = value
         self.ground_collition_rect.x = value
 
-    def change_y(self,delta_y):
-        self.rect.y += delta_y
-        self.collition_rect.y += delta_y
-        self.ground_collition_rect.y += delta_y
 
     def set_y(self, value):
         self.rect.y = value
@@ -229,19 +240,53 @@ class Player(Fallable, Attacker, Animatable, Killable):
                     self.frame = 0
     
     def update(self,delta_ms,plataform_list):
-        self.do_movement(delta_ms,plataform_list)
         self.do_animation(delta_ms)
+        self.do_movement(delta_ms,plataform_list)
         
     
     def draw(self,screen):
         if(DEBUG):
-            pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
+            pygame.draw.rect(screen,color=(255,0 ,255),rect=self.collition_rect)
             pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
-        
+        Fallable.draw(self, screen)
         self.image = self.animation[self.frame]
         screen.blit(self.image,self.rect)
         self.particle_list.show_particles(screen)
+        self.draw_icon(screen)
         
+
+    def draw_icon(self, screen):
+        image = pygame.image.load(PLAYER_ICON_PATH).convert_alpha()
+        image_width = image.get_width()
+        image_height = image.get_height()
+
+
+
+        icon_x = self.rect.left + self.rect.width // 2
+        icon_y = self.rect.top
+        image_x = icon_x - image_width // 2
+        image_y = (icon_y - image_height)
+
+        Auxiliar.transform_image_color(image, C_RED, self.player_color)
+        
+        # Draw the image
+        screen.blit(image, (image_x, image_y))
+
+        # Create the font object
+        font = pygame.font.Font(None, 30)
+
+        # Create the text surface
+        text_surface = font.render(f"P{self.id}", True, self.player_color)
+
+        # Get the dimensions of the text surface
+        text_width, text_height = text_surface.get_size()
+
+        # Calculate the position to center the text above the image
+        text_x = icon_x - text_width // 2
+        text_y = image_y - text_height - 10
+
+        # Draw the text above the image
+        screen.blit(text_surface, (text_x, text_y))
 
     def events(self,delta_ms,keys):
         self.tiempo_transcurrido += delta_ms

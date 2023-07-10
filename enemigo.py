@@ -42,9 +42,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
         self.rect.x = x
         self.rect.y = y
         self.collition_rect = pygame.Rect(x+self.rect.width/3,y,self.rect.width/3,self.rect.height)
-        self.ground_collition_rect = pygame.Rect(self.collition_rect)
-        self.ground_collition_rect.height = GROUND_COLLIDE_H
-        self.ground_collition_rect.y = y + self.rect.height - GROUND_COLLIDE_H
+        Fallable.create_ground_collition_rect(self)
 
         self.is_jump = False
         self.is_shoot = False
@@ -98,7 +96,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
     
     def must_turn_direction(self):
         number = random.randint(1,100)
-        return number <= 5 or CollisionHelper.is_against_edge(entity=self)
+        return number <= 3 or CollisionHelper.is_against_edge(entity=self) 
     
     def choose_direction(self):
         number = random.randint(1,2)
@@ -154,7 +152,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
         if(DEBUG):
             pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
             pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
-        
+        Fallable.draw(self, screen)
         self.image = self.animation[self.frame]
         screen.blit(self.image,self.rect)
         self.particle_list.show_particles(screen)
@@ -176,6 +174,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
                     player.receive_shoot(ENEMY_DAMAGE)
             else:
                 self.is_knife = False
+    
             
     def get_attack_animation_by_direction(self):
         animation = self.knife_l

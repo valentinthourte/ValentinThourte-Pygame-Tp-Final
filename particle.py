@@ -3,7 +3,7 @@ import random
 from constantes import *
 
 class Particle:
-    def __init__(self, owner, x, y) -> None:
+    def __init__(self, owner, x, y, color) -> None:
         self.owner = owner
         self.radius = random.randint(4,6)
         self.position_x = x
@@ -15,6 +15,7 @@ class Particle:
         self.velocity_x = (random.randint(0, VELOCITY_VARIABILITY) / 10) - VELOCITY_VARIABILITY / 20
         self.velocity_y = -2
         self.velocity = (self.velocity_x, self.velocity_y)
+        self.color = color
 
     def show(self, surface):
         self.position_x += self.velocity_x
@@ -25,7 +26,7 @@ class Particle:
         if self.radius <= 0:
             self.owner.remove(self)
         else:
-            pygame.draw.circle(surface, (230, 37, 72, 0.7), (self.position_x, self.position_y), self.radius)
+            pygame.draw.circle(surface, self.color, (self.position_x, self.position_y), self.radius)
     
 class ParticleList:
     def __init__(self, owner) -> None:
@@ -49,4 +50,11 @@ class ParticleList:
             PARTICLE_X_VARIABILITY = self.owner.rect.width // 2 
             x = self.owner.rect.center[0] + (random.randint(0, PARTICLE_X_VARIABILITY) - PARTICLE_X_VARIABILITY / 2) 
             y = self.owner.rect.center[1] + (random.randint(0, PARTICLE_Y_VARIABILITY) - PARTICLE_Y_VARIABILITY / 2) 
-            self.particle_list.append(Particle(self, x,y))
+            self.particle_list.append(Particle(self, x,y, C_BLOOD))
+
+    def create_fall_particles(self):
+        for i in range(0, PARTICLE_AMOUNT):
+            PARTICLE_X_VARIABILITY = self.owner.rect.width // 2 
+            x = self.owner.rect.center[0] + (random.randint(0, PARTICLE_X_VARIABILITY) - PARTICLE_X_VARIABILITY / 2) 
+            y = self.owner.rect.bottom  
+            self.particle_list.append(Particle(self, x, y, C_FALL))    

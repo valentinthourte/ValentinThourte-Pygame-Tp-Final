@@ -1,18 +1,18 @@
 import pygame
 
 ANCHO_VENTANA = 1500
-ALTO_VENTANA = 800
-GROUND_LEVEL = 588
+ALTO_VENTANA = 843
+GROUND_LEVEL = 775
 FPS = 60
 
 
 EXPAND_TIME = 2000
 DIRECTION_L = 0
 DIRECTION_R = 1
-GROUND_COLLIDE_H = 8 # Aprox Gravedad/2 + 1
+GROUND_COLLIDE_H = 15 # Aprox Gravedad/2 + 1
 DEBUG = False
-DATABASE_NAME = "CowPocalypse"
-GAME_TITLE = "CowPocalypse"
+DATABASE_NAME = "OrcPocalypse"
+GAME_TITLE = "OrcoCalipsis"
 
 # COLOR CONSTANTS
 C_RED = (255,0,0)
@@ -27,6 +27,8 @@ C_YELLOW_2 = (255, 174, 0)
 C_GREEEN_2 = (38, 137, 0)
 C_ORANGE = (255, 81, 0)
 C_VICTORY =  (255, 215, 0)
+C_BLOOD = (230, 37, 72, 0.7)
+C_FALL =  (139, 69, 19)
 
 # MOUSE CONSTANTS
 M_STATE_NORMAL = 0
@@ -41,6 +43,12 @@ MULTIPLAYER_VICTORY_IMAGE_PATH = "images/assets/victory-pole.png"
 PATH_USER_BULLET = "images/assets/bullet_3.png"
 PATH_COWBOY_IMAGES = "images/caracters/players/cowboy"
 PATH_COWGIRL_IMAGES = "images/caracters/players/cowgirl"
+PLAYER_ICON_PATH = "images/assets/player_icon.png"
+LEVEL_1_BACKGROUND = "images/locations/set_bg_03/01/game_background_1.png"
+FOOD_IMG_DIR = "images/assets/consumables/food"
+START_IMAGE_PATH = "images/gui/start-image/start_image.png"
+PLATFORM_HEIGHT = 25
+PLATFORM_WIDTH = 25
 
 # GAME CONSTANTS
 NAME_FORM_MENU_B = "form_menu_B"
@@ -52,7 +60,7 @@ TERMINAL_VELOCITY = 40
 MENU_FORM_WIDTH = 800
 MENU_FORM_HEIGHT = 650
 BULLET_DAMAGE = 5
-ENEMY_DAMAGE = 8
+ENEMY_DAMAGE = 25
 
 # PLAYER CONSTANTS
 LEFT = "left"

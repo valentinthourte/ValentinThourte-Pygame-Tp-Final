@@ -5,6 +5,7 @@ from gui.gui_button import Button
 
 class Form():
     forms_dict = {}
+    last_active = None
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         self.forms_dict[name] = self
         self.master_surface = master_surface
@@ -28,6 +29,7 @@ class Form():
             
     @staticmethod
     def set_active(name):
+        Form.last_active = Form.get_active()
         for aux_form in Form.forms_dict.values():
             aux_form.active = False
         Form.forms_dict[name].active = True

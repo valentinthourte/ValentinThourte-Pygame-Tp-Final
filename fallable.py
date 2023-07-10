@@ -1,12 +1,14 @@
 from collision_helper import CollisionHelper
 from constantes import *
+from particle import ParticleList
 
 class Fallable():
     def __init__(self):
         self.velocity_y = 0
         self.acceleration_y = 0
-        self.is_grounded = True
+        self.is_grounded = False
         self.jumped = False
+        self.fall_particle_list = ParticleList(self) 
         
     
     def update_gravity(self):
@@ -34,5 +36,18 @@ class Fallable():
         return retorno   
 
     def update_grounded(self, platform_list):
+        was_grounded = self.is_grounded
         self.is_grounded = self.is_on_plataform(platform_list)
+        if was_grounded != self.is_grounded and was_grounded == False:
+            self.fall_particle_list.create_fall_particles()
+
+    def draw(self, screen):
+        self.fall_particle_list.show_particles(screen)
+
+    @staticmethod
+    def create_ground_collition_rect(entity):
+        entity.ground_collition_rect = pygame.Rect(entity.collition_rect)
+        entity.ground_collition_rect.height = GROUND_COLLIDE_H
+        entity.ground_collition_rect.y = entity.collition_rect.bottom - GROUND_COLLIDE_H
+
 

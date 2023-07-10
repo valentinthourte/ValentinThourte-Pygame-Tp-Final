@@ -34,7 +34,7 @@ class FormGameLevel1_MP(FormGameLevel1):
     
     def create_victory(self):
         # self.victory = Victory(MULTIPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 137, 200)
-        self.victory = Victory(SINGLEPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 137, 200)
+        self.victory = Victory(self, SINGLEPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 137, 200)
 
     def on_click_boton1(self, parametro):
         self.set_active(parametro)
@@ -56,6 +56,8 @@ class FormGameLevel1_MP(FormGameLevel1):
             if self.player_can_update(player):
                 player.events(delta_ms,keys)
             player.update(delta_ms,self.platform_list)
+        self.victory.update(delta_ms, plataform_list=self.platform_list)
+        
 
     def check_victory(self):
 

@@ -1,29 +1,7 @@
-import pygame
-from plataforma import Plataform
-# from constantes import *
+from plataforma import MovingPlatform, Plataform
 import constantes
 
 class PlatformFactory():
-
-    @staticmethod
-    def get_platforms_l1():
-
-        
-        plataform_list = PlatformFactory.get_wide_platform(400, 500, 25, 25, 1)
-        plataform_list += PlatformFactory.get_wide_platform(600, 430, 25, 25, 0)
-        plataform_list += PlatformFactory.get_wide_platform(750, 360, 25, 25, 2)
-        
-
-        return plataform_list
-
-    @staticmethod
-    def get_platforms_for_level(level: str):
-        match level:
-            case constantes.LEVEL_1:
-                return PlatformFactory.get_platforms_l1()
-            case _:
-                return []
-        
     @staticmethod
     def get_wide_platform(x, y, block_width, block_height, inner_block_amount):
         platform_list = []
@@ -43,5 +21,20 @@ class PlatformFactory():
     
     def get_center_platform(x, y, width, height):
         return Plataform(x, y, width, height, type=constantes.CENTER_PLATFORM_TYPE)
+    
+    def get_left_moving_platform(x, y, width, height, distance, speed,direction):
+        return MovingPlatform(x, y, width, height, constantes.LEFT_PLATFORM_TYPE, distance, speed,direction)
+    
+    def get_right_moving_platform(x, y, width, height, distance, speed,direction):
+        return MovingPlatform(x, y, width, height, constantes.RIGHT_PLATFORM_TYPE, distance, speed,direction)
+    
+    def get_center_moving_platform(x, y, width, height, distance, speed,direction):
+        return MovingPlatform(x, y, width, height, constantes.CENTER_PLATFORM_TYPE, distance, speed,direction)
+    
+    def get_moving_platform_from_platform(platform, distance, speed = 2, direction = constantes.DIRECTION_R):
+        return MovingPlatform.from_parent(platform, distance, speed, direction)
+    
+    
+    
 
     

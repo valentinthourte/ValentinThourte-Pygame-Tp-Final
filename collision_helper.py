@@ -69,5 +69,16 @@ class CollisionHelper():
     def consumable_must_float(consumable, ground):
         return ground.top - consumable.rect.y < consumable.float_height
 
+    @staticmethod
+    def get_contacting_platform_for_entity(entity, platform_list, level):
+        contacting_platform = None
+        for platform in platform_list:
+            if CollisionHelper.are_colliding(entity.ground_collition_rect, platform.collition_rect):
+                contacting_platform = platform.collition_rect
+        if not contacting_platform and CollisionHelper.entity_is_grounded(entity, level):
+            contacting_platform = level.ground
+        return contacting_platform
+
+
                 
     

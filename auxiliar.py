@@ -41,3 +41,15 @@ class Auxiliar:
             for i in range(repeat_frame):
                 lista.append(surface_fotograma)
         return lista
+
+    @staticmethod
+    def transform_image_color(image, target_color, new_color):
+        for x in range(image.get_width()):
+            for y in range(image.get_height()):
+                # Get the color of the current pixel
+                pixel_color = image.get_at((x, y))
+
+                # Check if the pixel color matches the target color
+                if pixel_color == target_color:
+                    # Transform the color to green (RGB: 0, 255, 0)
+                    image.set_at((x, y), new_color)

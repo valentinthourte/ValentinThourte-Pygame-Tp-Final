@@ -1,3 +1,4 @@
+from moving_background import MovingBackground
 import pygame
 from pygame.locals import *
 import constantes
@@ -11,14 +12,14 @@ from health_consumable import HealthConsumable
 from levels.level import Level
 from player import Player
 from enemigo import Enemy
-from plataforma import Plataform
+from plataforma import MovingPlatform, Plataform
 from background import Background
 from bullet import Bullet
 from collision_helper import CollisionHelper
 from victory import Victory
 from abc import ABC, abstractmethod
 from enemy_factory import EnemyFactory
-from platform_factory import PlatformFactory
+from platform_helper import PlatformHelper
 
 
 class FormGameLevel1(Level):
@@ -37,18 +38,20 @@ class FormGameLevel1(Level):
         self.font = pygame.font.Font(None, 24)
 
         # --- GAME ELEMNTS --- 
-        self.static_background = Background(x=0,y=0,width=w,height=h,path="images/locations/set_bg_01/forest/all.png")
+        self.background = self.create_background()
+        self.static_background = Background(x=0,y=0,width=w,height=h,path=constantes.LEVEL_1_BACKGROUND)
         self.ground = pygame.Rect(0, constantes.GROUND_LEVEL,constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA -  constantes.GROUND_LEVEL)
         self.bullet_list = []
 
         self.enemy_list = [EnemyFactory.get_ogre_enemy(450,400,self), EnemyFactory.get_ogre_enemy(900, 400, self)]
 
-        self.platform_list = PlatformFactory.get_platforms_for_level(constantes.LEVEL_1)
+        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_1)
 
         self.has_won = False
         self.is_paused = False
         self.consumable_list = []
-        
+        self.max_consumable_amount = 10
+        self.consumable_count = 0
         self.player_list = []
 
     @abstractmethod
@@ -59,10 +62,14 @@ class FormGameLevel1(Level):
     def create_victory(self):
         pass
 
+    def create_background(self):
+        return MovingBackground(constantes.LEVEL_1_BACKGROUND, self.surface, 3, 4)
+
     def update(self, lista_eventos,keys,delta_ms, player_list):
-        self.check_victory()
         if not self.freeze():
             self.update_consumables(delta_ms, self.platform_list, player_list)
+            for platform in self.platform_list:
+                platform.update()
             for aux_widget in self.widget_list:
                 aux_widget.update(lista_eventos)
                 
@@ -72,6 +79,7 @@ class FormGameLevel1(Level):
             for enemy_element in self.enemy_list:
                 enemy_element.update(delta_ms,self.platform_list, player_list)
     
+    
     def update_consumables(self, delta_ms, platform_list, player_list):
         self.create_consumable()
         for consumable in self.consumable_list:
@@ -80,6 +88,7 @@ class FormGameLevel1(Level):
 
     def create_consumable(self):
         if self.must_create_consumable():
+            self.consumable_count += 1
             self.consumable_list.append(self.get_random_consumable())
 
     def must_create_consumable(self):
@@ -88,7 +97,7 @@ class FormGameLevel1(Level):
         if actual_time - self.last_consumable_time > self.consumable_time_interval:
             self.last_consumable_time = actual_time
             can_create = True
-        return len(self.consumable_list) < 3 and can_create
+        return len(self.consumable_list) < 3 and can_create and self.max_consumable_amount > self.consumable_count
 
     def get_coords_for_new_consumable(self):
         return random.randint(15, constantes.ANCHO_VENTANA - 15),random.randint(15, self.ground.top - 5)
@@ -103,11 +112,13 @@ class FormGameLevel1(Level):
         self.consumable_list.remove(consumable)
     
     def draw(self): 
+        if constantes.DEBUG:
+            self.draw_ground()
         
-        # self.draw_ground()
         super().draw()
         screen = self.surface
         self.static_background.draw(self.surface)
+
 
         for plataforma in self.platform_list:
             plataforma.draw(self.surface)
@@ -137,7 +148,7 @@ class FormGameLevel1(Level):
             y += self.life_bar.get_height() + 3
     
     def draw_ground(self):
-        pygame.draw.rect(self.surface, (0,0,0,0), self.ground)
+        pygame.draw.rect(self.surface, (255,255,255), self.ground)
 
     def player_shoot(self, bullet):
         self.bullet_list.append(bullet)
