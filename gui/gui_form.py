@@ -1,13 +1,15 @@
 import pygame
 from pygame.locals import *
-from gui.gui_widget import Widget
-from gui.gui_button import Button
 
 class Form():
     forms_dict = {}
     last_active = None
+    clean_forms_dict = {}
+    selected_type = "L{0}_SP"
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         self.forms_dict[name] = self
+        self.clean_forms_dict[name] = self
+        self.name = name
         self.master_surface = master_surface
         self.x = x
         self.y = y
@@ -26,7 +28,19 @@ class Form():
         self.widget_list = []
         if(self.color_background != None):
             self.surface.fill(self.color_background)
-            
+    
+    @staticmethod
+    def restart_form(param):
+        Form.forms_dict[param] = Form.clean_forms_dict[param]
+        Form.forms_dict[param].restart()
+        Form.set_active(param)
+
+    @staticmethod
+    def quit():
+        import sys
+        pygame.quit()
+        sys.exit()
+        
     @staticmethod
     def set_active(name):
         Form.last_active = Form.get_active()
@@ -41,6 +55,11 @@ class Form():
                 return aux_form
         return None
 
+    @staticmethod
+    def remove(name):
+        if name in Form.forms_dict:
+            Form.forms_dict.pop(name)
+
     def render(self):
         pass
 
@@ -51,24 +70,4 @@ class Form():
     def draw(self):
         self.master_surface.blit(self.surface,self.slave_rect)
         for aux_widget in self.widget_list:    
-            aux_widget.draw()
-
-class FormMenu(Form):
-    def __init__(self,master_surface,x,y,w,h,color_background,color_border,active):
-        super().__init__(master_surface,x,y,w,h,color_background,color_border,active)
-
-        self.boton1 = Button(master=self,x=100,y=50,w=200,h=50,color_background=(255,0,0),color_border=(255,0,255),on_click=self.on_click_boton1,on_click_param="1234",text="MENU",font="Verdana",font_size=30,font_color=(0,255,0))
-        self.boton2 = Button(master=self,x=200,y=50,w=200,h=50,color_background=(255,0,0),color_border=(255,0,255),on_click=self.on_click_boton1,on_click_param="8",text="MENU 2",font="Verdana",font_size=30,font_color=(0,255,0))
-        self.lista_widget = [self.boton1,self.boton2]
-
-    def on_click_boton1(self, parametro):
-        print("CLICK",parametro)
-
-    def update(self, lista_eventos):
-        for aux_widget in self.lista_widget:
-            aux_widget.update(lista_eventos)
-
-    def draw(self): 
-        super().draw()
-        for aux_widget in self.lista_widget:    
             aux_widget.draw()
