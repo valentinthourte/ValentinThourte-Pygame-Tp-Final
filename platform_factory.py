@@ -32,7 +32,7 @@ class PlatformFactory():
         return MovingPlatform(x, y, width, height, constantes.CENTER_PLATFORM_TYPE, distance, speed,direction)
     
     def get_moving_platform_from_platform(platform, distance, speed = 2, direction = constantes.DIRECTION_R):
-        return MovingPlatform.from_parent(platform, distance, speed, direction)
+        return MovingPlatform.from_parent(platform, distance, speed, starting_direction=direction)
     
     
     

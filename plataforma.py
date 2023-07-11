@@ -34,19 +34,27 @@ class MovingPlatform(Plataform):
 
         self.move_speed = move_speed
         self.direction = starting_direction
+        self.starting_direction = starting_direction
 
     @classmethod
     def from_parent(cls, parent_instance, move_distance=100, move_speed=2, starting_direction=constantes.DIRECTION_R):
         return cls(parent_instance.rect.x, parent_instance.rect.y, parent_instance.rect.width, parent_instance.rect.height, parent_instance.type, move_distance, move_speed, starting_direction)
 
     def update(self):
-        match self.direction:
-            case constantes.DIRECTION_R:
-                if self.rect.x >= self.end_x:
-                    self.toggle_direction()
-            case constantes.DIRECTION_L:
-                if self.rect.x <=  self.start_x:
-                    self.toggle_direction()
+        if self.starting_direction == constantes.DIRECTION_R:
+            match self.direction:
+                case constantes.DIRECTION_R:
+                    if self.rect.x > self.end_x:
+                        self.toggle_direction()
+                case constantes.DIRECTION_L:
+                    if self.rect.x < self.start_x:
+                        self.toggle_direction()
+        else:
+            if self.rect.x > self.start_x:
+                self.toggle_direction()
+            if self.rect.x < self.end_x:
+                self.toggle_direction()
+                    
         self.change_x()
 
     def change_x(self):
@@ -54,6 +62,7 @@ class MovingPlatform(Plataform):
         self.collition_rect.x += self.move_speed
         self.ground_collition_rect.x += self.move_speed
     
+
     def toggle_direction(self):
         direction = constantes.DIRECTION_R
         if self.direction == constantes.DIRECTION_R:

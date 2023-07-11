@@ -1,4 +1,6 @@
 import pygame
+import pygame.mixer
+
 from pygame.locals import *
 import sys
 from constantes import *
@@ -12,6 +14,10 @@ pygame.init()
 clock = pygame.time.Clock()
 
 GuiHelper.initialize_gui_forms(screen)
+pygame.mixer.init()
+pygame.mixer.music.load(MUSIC_PATH)
+pygame.mixer.music.set_volume(0.15)
+pygame.mixer.music.play(-1)
 
 while True:     
     lista_eventos = pygame.event.get()

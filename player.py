@@ -1,5 +1,4 @@
 import pygame
-from bullet import Bullet
 from collision_helper import CollisionHelper
 from constantes import *
 from auxiliar import Auxiliar
@@ -14,7 +13,7 @@ class Player(Fallable, Attacker, Animatable, Killable):
 
     def __init__(self,id,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100, lives = 182) -> None:
         Fallable.__init__(self)
-        Attacker.__init__(self)
+        Attacker.__init__(self, PLAYER_SHOOT_INTERVAL)
         Animatable.__init__(self)
         Killable.__init__(self, lives=lives)
 
@@ -33,12 +32,14 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.die = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Dead ({0}).png",1,10,flip=False,scale=p_scale,repeat_frame=1)
 
         self.particle_list = ParticleList(self)
-
+        self.starting_x = x
+        self.starting_y = y
         self.frame = 0
         self.score = 0
         self.move_x = 0
 
-        self.weapon = Pistol(self)
+        self.weapon = Pistol(self,45)
+        self.score = 0
         
         self.velocity_y = 0
         self.acceleration_y = 0
@@ -84,24 +85,28 @@ class Player(Fallable, Attacker, Animatable, Killable):
         b = random.randint(50, 200)
         return (r,g,b)
 
+    def reset_coords(self):
+        self.set_x(self.starting_x)
+        # self.set_y(self.starting_y)
+
+    def increase_damage(self, percent):
+        self.weapon.increase_damage(percent)
+
+    def reset_damage(self):
+        self.weapon.reset_damage()
 
     def walk(self,direction):
-        if(self.is_grounded):
-            move_speed = self.speed_walk
-        else:
-            move_speed = self.speed_walk // 2
-
         if(self.direction != direction or (self.animation != self.walk_r and self.animation != self.walk_l)):
             self.frame = 0
             self.direction = direction
             if(direction == DIRECTION_R):
                 if not CollisionHelper.is_against_right_edge(self):
-                    self.move_x = move_speed
+                    self.move_x = self.speed_walk
                     self.animation = self.walk_r
             else:
                 
                 if not CollisionHelper.is_against_left_edge(self):
-                    self.move_x = -move_speed
+                    self.move_x = -self.speed_walk
                     self.animation = self.walk_l
 
     def shoot(self,on_off = True):
@@ -114,8 +119,6 @@ class Player(Fallable, Attacker, Animatable, Killable):
                     self.animation = self.shoot_r
                 else:
                     self.animation = self.shoot_l
-
-
                 self.owner.player_shoot(self.weapon.shoot(self.direction))
                 
     def receive_shoot(self, damage = 1):
@@ -143,7 +146,6 @@ class Player(Fallable, Attacker, Animatable, Killable):
     def jump(self):
         if(self.can_jump):
             self.jumped = True
-            self.move_x = int(self.move_x / 2)
             self.velocity_y = -self.jump_power
             if(self.direction == DIRECTION_R):
                 self.animation = self.jump_r
@@ -242,7 +244,6 @@ class Player(Fallable, Attacker, Animatable, Killable):
     def update(self,delta_ms,plataform_list):
         self.do_animation(delta_ms)
         self.do_movement(delta_ms,plataform_list)
-        
     
     def draw(self,screen):
         if(DEBUG):
@@ -317,6 +318,12 @@ class Player(Fallable, Attacker, Animatable, Killable):
         
         if(keys[self.player_keys[ATTACK]] and not keys[self.player_keys[SHOOT]]):
             self.knife()   
+        
+        if (keys[self.player_keys[USE]]):
+            self.use()
+
+    def use(self):
+        self.owner.check_use(self)
 
     def get_bullet_end_coords_from_direction(self, direction):
         coords = [0, self.rect.centery]

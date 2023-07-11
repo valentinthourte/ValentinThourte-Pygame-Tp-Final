@@ -20,7 +20,7 @@ class CollisionHelper():
     @staticmethod
     def fallable_colliding_with_entity(fallable, entity):
         return CollisionHelper.fallable_colliding_with_rect(fallable, entity.ground_collition_rect)
-    
+
     @staticmethod
     def fallable_will_collide_with_rect(fallable, rect):
         fallable_x = fallable.ground_collition_rect.x
@@ -29,7 +29,6 @@ class CollisionHelper():
         will_collide = False
 
         if fallable_x > rect.left and fallable_x < rect.right:
-            print(f"inside platform - is-above: {fallable_y < rect.top} - will-be-below: {fallable_next_y >= rect.top}")
             will_collide = fallable_y < rect.top and fallable_next_y >= rect.top
 
 

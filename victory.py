@@ -3,9 +3,10 @@ from constantes import *
 from fallable import Fallable
 
 class Victory(Fallable):
-    def __init__(self,owner, image_path, width, height, x, y, final_font_size,frame_rate_ms = 100,move_rate_ms = 50) -> None:
+    def __init__(self,owner, image_path, width, height, x, y, final_font_size,frame_rate_ms = 100,move_rate_ms = 50, scale = True) -> None:
         self.image = pygame.image.load(image_path).convert_alpha()
-        self.image = pygame.transform.scale(self.image,(width,height))
+        if scale:
+            self.image = pygame.transform.scale(self.image,(width,height))
 
         self.final_font_size = final_font_size
         self.delta_font_size = self.final_font_size / EXPAND_TIME

@@ -30,6 +30,9 @@ class Consumable(Fallable):
                 player.picked_up(self)
     
     def effect(self, player):
+        self.destroy()
+    
+    def destroy(self):
         self.owner.destroy_consumable(self)
     
     def draw(self, screen):

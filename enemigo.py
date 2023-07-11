@@ -11,9 +11,9 @@ import random
 
 class Enemy(Attacker, Animatable, Killable, Fallable):
     
-    def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100, lives = 100) -> None:
+    def __init__(self,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner,p_scale=1,interval_time_jump=100, lives = 100, is_active = True) -> None:
         Fallable.__init__(self)
-        Attacker.__init__(self)
+        Attacker.__init__(self, ENEMY_ATTACK_INTERVAL)
         Animatable.__init__(self)
         Killable.__init__(self, lives)
 
@@ -25,6 +25,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
         self.knife_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/ATTAK/ATTAK_00{0}.png",0,7,flip=True,scale=p_scale)
         self.die = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/ork_sword/DIE/DIE_00{0}.png",0,6,scale=p_scale)
         
+        self.is_active = is_active
         self.contador = 0
         self.frame = 0
         self.lives = lives
@@ -62,6 +63,9 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
 
         self.particle_list = ParticleList(self)
 
+        self.health_bar_width = self.rect.width
+        self.health_bar_height = 5
+
         self.owner = owner
    
     def change_x(self,delta_x):
@@ -96,7 +100,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
     
     def must_turn_direction(self):
         number = random.randint(1,100)
-        return number <= 3 or CollisionHelper.is_against_edge(entity=self) 
+        return number <= 3 or CollisionHelper.is_against_edge(entity=self)
     
     def choose_direction(self):
         number = random.randint(1,2)
@@ -141,21 +145,43 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
                     self.frame = 0
 
     def update(self,delta_ms,plataform_list, player_list):
-        if not self.died():
-            self.do_movement(delta_ms,plataform_list)
-            self.check_collision(player_list)
-        
-        self.do_animation(delta_ms) 
+        if self.is_active:
+            if not self.died():
+                self.do_movement(delta_ms,plataform_list)
+                self.check_collision(player_list)
+            
+            self.do_animation(delta_ms) 
 
     def draw(self,screen):
-        
-        if(DEBUG):
-            pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
-            pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
-        Fallable.draw(self, screen)
-        self.image = self.animation[self.frame]
-        screen.blit(self.image,self.rect)
-        self.particle_list.show_particles(screen)
+        if self.is_active:
+            if(DEBUG):
+                pygame.draw.rect(screen,color=(255,0 ,0),rect=self.collition_rect)
+                pygame.draw.rect(screen,color=(255,255,0),rect=self.ground_collition_rect)
+            Fallable.draw(self, screen)
+            self.image = self.animation[self.frame]
+            screen.blit(self.image,self.rect)
+            self.particle_list.show_particles(screen)
+            self.draw_health_bar(screen)
+
+
+    def activate(self):
+        self.is_active = True
+
+    def active(self):
+        return self.is_active
+    
+    def draw_health_bar(self, screen):
+
+        health_percentage = self.lives / 100  
+        health_bar_width = int(self.health_bar_width * health_percentage)
+
+        health_bar_x = self.rect.x
+        health_bar_y = self.rect.y - self.health_bar_height - 5  
+
+
+        pygame.draw.rect(screen, (255, 0, 0), (health_bar_x, health_bar_y, self.health_bar_width, self.health_bar_height))
+
+        pygame.draw.rect(screen, (0, 255, 0), (health_bar_x, health_bar_y, health_bar_width, self.health_bar_height))
 
     def receive_shoot(self, damage = 1) -> bool:
         self.lives -= damage 

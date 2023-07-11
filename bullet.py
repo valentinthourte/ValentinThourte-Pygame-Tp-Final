@@ -1,7 +1,4 @@
-from enemigo import Enemy
-from player import *
 from constantes import *
-from auxiliar import Auxiliar
 import math
 from collision_helper import CollisionHelper
 
@@ -38,13 +35,13 @@ class Bullet():
         self.y = self.y + delta_y
         self.rect.y = int(self.y)
 
-    def do_movement(self,delta_ms,plataform_list,enemy_list,player):
+    def do_movement(self,delta_ms,plataform_list,enemy_list,player, boss = None):
         self.tiempo_transcurrido_move += delta_ms
         if(self.tiempo_transcurrido_move >= self.move_rate_ms):
             self.tiempo_transcurrido_move = 0
             self.change_x(self.move_x)
             self.change_y(self.move_y)
-            self.check_impact(plataform_list,enemy_list,player)
+            self.check_impact(plataform_list,enemy_list,player, boss)
 
     def do_animation(self,delta_ms):
         self.tiempo_transcurrido_animation += delta_ms
@@ -52,14 +49,24 @@ class Bullet():
             self.tiempo_transcurrido_animation = 0
             pass
     
-    def check_impact(self,plataform_list,enemy_list,player_list):
-        self.check_player_impact(player_list)
-        
-        self.check_enemy_impact(enemy_list)
+    def check_impact(self,plataform_list,enemy_list,player_list, boss):
+        if boss and self.owner == boss.weapon:
+            self.check_player_impact(player_list)
+            pygame.transform.rotate(self.image, 5)
+        else:
+            self.check_enemy_impact(enemy_list)
+            self.check_platform_impact(plataform_list)
+            if boss:
+                self.check_boss_impact(boss)
+        if self.rect.x <= 0 or self.rect.x >= ANCHO_VENTANA:
+            self.is_active = False
 
-        self.check_platform_impact(plataform_list)
-
         
+    def check_boss_impact(self, boss):
+        if self.is_active and CollisionHelper.entities_colliding(self, boss):
+            boss.receive_shoot(self.damage)
+            self.is_active = False
+
     def check_platform_impact(self, platform_list):
         for platform in platform_list:
             if self.is_active and CollisionHelper.entities_colliding(self, platform):
@@ -69,17 +76,17 @@ class Bullet():
     def check_enemy_impact(self, enemy_list):
         for aux_enemy in enemy_list:
             if(self.is_active and self.owner != aux_enemy and CollisionHelper.entities_colliding(self, aux_enemy) and not aux_enemy.died()):
-                Enemy.receive_shoot(aux_enemy)
+                aux_enemy.receive_shoot(self.damage)
                 self.is_active = False
 
     def check_player_impact(self, player_list):
         for player in player_list:
             if(self.is_active and self.owner != player and CollisionHelper.player_colliding_with_entity(player, self) and not player.died()):
-                player.receive_shoot(BULLET_DAMAGE)
+                player.receive_shoot(self.damage)
                 self.is_active = False
 
-    def update(self,delta_ms,plataform_list,enemy_list,player):
-        self.do_movement(delta_ms,plataform_list,enemy_list,player)
+    def update(self,delta_ms,plataform_list,enemy_list,player, boss = None):
+        self.do_movement(delta_ms,plataform_list,enemy_list,player, boss)
         
         self.do_animation(delta_ms) 
 
