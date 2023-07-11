@@ -41,6 +41,8 @@ class FormGameLevel2_MP(FormGameLevel2):
             player.update(delta_ms,self.platform_list)
         self.victory.update(delta_ms, plataform_list=self.platform_list)
         
+        if self.final_button:
+            self.final_button.update(lista_eventos)
     def check_can_win(self):
         self.can_win = len(self.enemy_list) == 0 
         

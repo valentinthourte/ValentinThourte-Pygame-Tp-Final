@@ -36,7 +36,7 @@ class Form():
         Form.set_active(param)
 
     @staticmethod
-    def quit():
+    def quit(param):
         import sys
         pygame.quit()
         sys.exit()

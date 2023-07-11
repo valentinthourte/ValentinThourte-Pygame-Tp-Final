@@ -23,7 +23,7 @@ class FormGameLevel2_SP(FormGameLevel2):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
 
         self.create_victory()
-        self.next_level_button = None
+        self.final_button = None
         self.can_activate_boss = False
         self.boss = None
     
@@ -53,6 +53,9 @@ class FormGameLevel2_SP(FormGameLevel2):
         self.victory.update(delta_ms, plataform_list=self.platform_list)
 
         self.update_boss(delta_ms, player_list)
+
+        if self.final_button:
+            self.final_button.update(lista_eventos)
 
 
     def update_boss(self, delta_ms, player_list):
@@ -120,9 +123,9 @@ class FormGameLevel2_SP(FormGameLevel2):
         score = font.render(score_text, (score_x, score_y), C_RED)
         self.master_surface.blit(title, (title_x, title_y))
         self.master_surface.blit(score, (score_x, score_y))
-        if not self.next_level_button:
-            self.next_level_button = WidgetFactory.get_final_button(self,300,300, None)
-        self.next_level_button.draw()
+        if not self.final_button:
+            self.final_button = WidgetFactory.get_final_button(self,300,300, None)
+        self.final_button.draw()
         
 
     def check_can_win(self):

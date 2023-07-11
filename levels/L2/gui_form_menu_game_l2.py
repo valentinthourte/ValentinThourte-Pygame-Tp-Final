@@ -110,7 +110,7 @@ class FormGameLevel2(Level):
             
             for interactable in self.interactable_list:
                 interactable.update(player_list)
-
+                
         if not self.lost:
             self.check_loss()
         else:
