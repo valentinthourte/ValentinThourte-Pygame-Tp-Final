@@ -8,6 +8,7 @@ from db_helper import DBHelper
 from gui.gui_form import Form
 from gui.gui_helper import GuiHelper
 
+
 flags = DOUBLEBUF 
 screen = pygame.display.set_mode((ANCHO_VENTANA,ALTO_VENTANA), flags, 16)
 pygame.display.set_caption(GAME_TITLE)

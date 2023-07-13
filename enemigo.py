@@ -173,7 +173,8 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
     def draw_health_bar(self, screen):
 
         health_percentage = self.lives / 100  
-        health_bar_width = int(self.health_bar_width * health_percentage)
+        health_percentage = (self.lives / self.max_health) * 100
+        green_width = (health_percentage * self.health_bar_width) / 100
 
         health_bar_x = self.rect.x
         health_bar_y = self.rect.y - self.health_bar_height - 5  
@@ -181,7 +182,7 @@ class Enemy(Attacker, Animatable, Killable, Fallable):
 
         pygame.draw.rect(screen, (255, 0, 0), (health_bar_x, health_bar_y, self.health_bar_width, self.health_bar_height))
 
-        pygame.draw.rect(screen, (0, 255, 0), (health_bar_x, health_bar_y, health_bar_width, self.health_bar_height))
+        pygame.draw.rect(screen, (0, 255, 0), (health_bar_x, health_bar_y, green_width, self.health_bar_height))
 
     def receive_shoot(self, damage = 1) -> bool:
         self.lives -= damage 

@@ -38,8 +38,7 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.score = 0
         self.move_x = 0
 
-        # self.weapon = Pistol(self,45)
-        self.weapon = Pistol(self,900)
+        self.weapon = Pistol(self,45)
         self.score = 0
         
         self.velocity_y = 0

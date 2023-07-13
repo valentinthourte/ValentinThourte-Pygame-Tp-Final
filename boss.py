@@ -16,7 +16,7 @@ class Boss(Attacker,Killable, Animatable, Fallable):
     # Hay un 1% de chance por frame que el boss dispare una roca (ataque a rango). La misma es generada por el arma del boss (Hammer), que hereda de la clase Weapon
     # Si no dispara, hay un 5% de posibilidades que ejecute un ataque melee, el cual verifica colision con el jugador y le indica que fue golpeado, pasandole el daño inflingido
     # Al morir, le indica a su owner, el nivel en el que se encuentra, que fue asesinado, para que el mismo lleve a cabo las tareas que implica.
-    def __init__(self, x,y,owner,image_path,frame_rate_ms,move_rate_ms, lives, is_active, weapon_damage = 40, image_scale = 0.6):
+    def __init__(self, x,y,owner,image_path,frame_rate_ms,move_rate_ms, lives, is_active, weapon_damage = 20, image_scale = 0.6):
         Attacker.__init__(self, BOSS_ATTACK_INTERVAL)
         Animatable.__init__(self)
         Killable.__init__(self, lives)

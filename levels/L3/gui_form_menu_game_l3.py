@@ -64,7 +64,7 @@ class FormGameLevel3(Level):
     def create_boss(self):
         boss_x = 1000
         boss_y = 200
-        return Boss(boss_x,boss_y,self, constantes.LEVEL_3_BOSS_IMG,100,50,600,False)
+        return Boss(boss_x,boss_y,self, constantes.LEVEL_3_BOSS_IMG,100,50,600,False, weapon_damage=30)
     
     def create_enemies(self):
         self.enemy_list = []

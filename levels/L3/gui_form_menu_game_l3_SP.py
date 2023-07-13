@@ -100,7 +100,7 @@ class FormGameLevel3_SP(FormGameLevel3):
         x,y = self.slave_rect.center
         h = img.get_height() // 2
         w = img.get_width() // 2
-        image_x = x - w
+        image_x = x - w // 2
         image_y = ALTO_VENTANA - h
         background = Background(image_x,image_y,w,h,START_IMAGE_PATH, True)
         background.draw(self.surface)
@@ -114,13 +114,13 @@ class FormGameLevel3_SP(FormGameLevel3):
         title_y = 100
         score_text = f"Score: {self.player_1.score}"
         score_x = title_x
-        score_y = 500
+        score_y = 300
         font = pygame.font.Font(BLOOD_FONT_PATH, 60)
         score = font.render(score_text, (score_x, score_y), C_RED)
-        self.master_surface.blit(title, (title_x, title_y))
-        self.master_surface.blit(score, (score_x, score_y))
+        self.surface.blit(title, (title_x, title_y))
+        self.surface.blit(score, (score_x, score_y))
         if not self.final_button:
-            self.final_button = WidgetFactory.get_final_button(self,300,300, None)
+            self.final_button = WidgetFactory.get_final_button(self,550,550, None)
         self.final_button.draw()
         
 

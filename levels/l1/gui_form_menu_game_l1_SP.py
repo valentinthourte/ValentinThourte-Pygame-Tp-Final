@@ -91,7 +91,7 @@ class FormGameLevel1_SP(FormGameLevel1):
         x,y = self.slave_rect.center
         h = img.get_height() // 2
         w = img.get_width() // 2
-        image_x = x - w
+        image_x = x - w // 2
         image_y = ALTO_VENTANA - h
         background = Background(image_x,image_y,w,h,START_IMAGE_PATH, True)
         background.draw(self.surface)
