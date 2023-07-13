@@ -1,13 +1,16 @@
 
-
+import pygame
 from collision_helper import CollisionHelper
+from db_helper import DBHelper
 from gui.gui_form import Form
 import constantes
+from gui.gui_button import Button
 
 
 class Level(Form):
     level_dict = {}
     player_list = []
+    player_names = []
     clean_level = None
     def __init__(self, name, master_surface, x, y, w, h, color_background, color_border, active):
         super().__init__(name, master_surface, x, y, w, h, color_background, color_border, active)
@@ -16,6 +19,9 @@ class Level(Form):
         self.last_consumable_time = 0
         self.interactable_list = []
         self.lost = False
+
+        self.widget_list = []
+
 
     def check_use(self, player):
         for element in self.interactable_list:
@@ -28,8 +34,29 @@ class Level(Form):
             if not player.died():
                 lost = False
         self.lost = lost
+
     def restart(self):
         Level.player_list = []
+
+    @staticmethod
+    def update_player_names(name_list):
+        for name, player in zip(name_list, Level.player_list):
+            player.set_name(name)
+
+    @staticmethod
+    def add_score_to_players(score):
+        Level.update_player_names(Level.player_names)
+        for player in Level.player_list:
+            player.increase_score(score)
+
+    @staticmethod
+    def quit(param):
+        for player in Level.player_list:
+            DBHelper.set_score_for_player(player=player)
+        scores = DBHelper.get_scores()
+        for score in scores:
+            print(score)
+        Form.quit(param)
 
     @staticmethod
     def get_next_level_name():
@@ -53,7 +80,15 @@ class Level(Form):
     def update_players(level):  
         for player in Level.player_list:
             player.owner = level
-            player.reset_coords()
-
+            player.reset()
+    
+    def update(self, lista_eventos):
+        for aux_widget in self.widget_list:
+            aux_widget.update(lista_eventos)
+    
+    def draw(self):
+        super().draw()
+        for aux_widget in self.widget_list:
+            aux_widget.draw() 
     
     

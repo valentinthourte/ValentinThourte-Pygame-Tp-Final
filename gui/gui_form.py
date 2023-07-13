@@ -49,6 +49,10 @@ class Form():
         Form.forms_dict[name].active = True
 
     @staticmethod
+    def return_to_last_from(param):
+        Form.set_active(Form.last_active.name)
+
+    @staticmethod
     def get_active():
         for aux_form in Form.forms_dict.values():
             if(aux_form.active):

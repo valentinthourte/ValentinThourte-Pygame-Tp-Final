@@ -4,6 +4,7 @@ import pygame.mixer
 from pygame.locals import *
 import sys
 from constantes import *
+from db_helper import DBHelper
 from gui.gui_form import Form
 from gui.gui_helper import GuiHelper
 
@@ -14,10 +15,12 @@ pygame.init()
 clock = pygame.time.Clock()
 
 GuiHelper.initialize_gui_forms(screen)
+DBHelper.initialize_persistence()
 pygame.mixer.init()
 pygame.mixer.music.load(MUSIC_PATH)
 pygame.mixer.music.set_volume(0.15)
 pygame.mixer.music.play(-1)
+
 
 while True:     
     lista_eventos = pygame.event.get()

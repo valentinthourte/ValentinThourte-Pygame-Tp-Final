@@ -3,6 +3,7 @@ from gui.gui_form import Form
 from gui.gui_settings_form import SettingsForm
 from gui.gui_start_menu import StartMenuForm
 from gui.gui_you_win import FormYouWin
+from gui.gui_ranking import RankingForm
 
 
 class GuiFactory:
@@ -15,7 +16,11 @@ class GuiFactory:
     def create_settings_form(master_surface, w, h, active):
         x,y = GuiFactory.get_coordinates_for_surface_from_sizes(master_surface, w, h)
         SettingsForm(name=SETTINGS_MENU_NAME, master_surface=master_surface, x=x,y=y,w=w,h=h,color_background=(0,0,0),color_border=(0,0,0), active=active)
-        
+    
+    @staticmethod
+    def create_rankings_form(master_surface, w, h, active):
+        x,y = GuiFactory.get_coordinates_for_surface_from_sizes(master_surface, w, h)
+        RankingForm(name=RANKINGS_MENU_NAME, master_surface=master_surface, x=x,y=y,w=w,h=h,color_background=(0,0,0),color_border=(0,0,0), active=active)
         
     @staticmethod
     def get_coordinates_for_surface_from_sizes(master_surface, w, h):

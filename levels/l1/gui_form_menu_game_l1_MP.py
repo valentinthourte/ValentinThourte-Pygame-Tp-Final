@@ -21,6 +21,7 @@ class FormGameLevel1_MP(FormGameLevel1):
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
         self.create_victory()
+        self.added_score = False
         self.next_level_button = WidgetFactory.get_next_level_button(self,300,300, Form.selected_type.format(2))
 
     def create_player(self):
@@ -69,7 +70,10 @@ class FormGameLevel1_MP(FormGameLevel1):
             if CollisionHelper.player_colliding_with_entity(self.player_1, self.victory):
                 self.has_won = True
                 if self.victory.show_victory(self.surface):
-                    self.show_won_screen()
+                    self.show_won_screen()                    
+                    if not self.added_score:
+                        Level.add_score_to_players(self.score)
+                        self.added_score = True
 
     def show_won_screen(self):
         self.surface.fill(C_BLACK)

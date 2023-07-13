@@ -1,52 +1,54 @@
+import random
+from boss import Boss
+from button_interactable import ButtonInteractable
 from damage_consumable import DamageConsumable
-from moving_background import MovingBackground
 import pygame
 from pygame.locals import *
 import constantes
-import random
-# from constantes import *
 from gui.gui_form import Form
 from gui.gui_button import Button
-from gui.gui_textbox import TextBox
-from gui.gui_progressbar import ProgressBar
 from health_consumable import HealthConsumable
 from levels.level import Level
-from player import Player
 from enemigo import Enemy
-from plataforma import MovingPlatform, Plataform
 from background import Background
 from collision_helper import CollisionHelper
-from victory import Victory
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from enemy_factory import EnemyFactory
 from platform_helper import PlatformHelper
 from gui.widget_factory import WidgetFactory
 
 
-class FormGameLevel1(Level):
+class FormGameLevel3(Level):
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
 
-        
 
-        # --- GUI WIDGET --- 
-        self.reload_platforms_button = Button(master=self,x=300,y=10,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.reload_platforms,on_click_param="form_menu_B",text="Reload Platforms",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
-
-        self.widget_list = [self.reload_platforms_button]
 
         self.life_bar = pygame.image.load("images/assets/vida.png")
         self.life_line = pygame.image.load("images/assets/vida_verde_2.png")
         self.font = pygame.font.Font(None, 24)
 
-        self.score = 0
+
+
+                # --- GUI WIDGET --- 
+        self.reload_platforms_button = Button(master=self,x=300,y=10,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.reload_platforms,on_click_param="form_menu_B",text="Reload Platforms",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
+
+        self.widget_list = [self.reload_platforms_button]
+
         # --- GAME ELEMNTS --- 
-        self.background = self.create_background()
-        self.static_background = Background(x=0,y=0,width=w,height=h,path=constantes.LEVEL_1_BACKGROUND)
+        self.static_background = Background(x=0,y=0,width=w,height=h,path=constantes.LEVEL_3_BACKGROUND)
         self.ground = pygame.Rect(0, constantes.GROUND_LEVEL,constantes.ANCHO_VENTANA, constantes.ALTO_VENTANA -  constantes.GROUND_LEVEL)
         self.bullet_list = []
+        self.loss_button = None
 
+
+        self.score = 0
+        
+        self.killed_boss = False
+
+        self.max_enemies = 10
         self.create_enemies()
-        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_1)
+        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_3)
 
         self.has_won = False
         self.can_win = False
@@ -55,16 +57,24 @@ class FormGameLevel1(Level):
         self.max_consumable_amount = 10
         self.consumable_count = 0
         self.enemy_count = 0
-        self.loss_button = None
+        self.interactable_list.append(ButtonInteractable(25,120,32,32,self,scale=False))
+        self.must_update_players = True
 
+
+    def create_boss(self):
+        boss_x = 1000
+        boss_y = 200
+        return Boss(boss_x,boss_y,self, constantes.LEVEL_3_BOSS_IMG,100,50,600,False)
+    
     def create_enemies(self):
         self.enemy_list = []
-        for i in range(7):
+        for i in range(self.max_enemies):
             x,y = self.get_coords_for_new_entity()
-            self.enemy_list.append(EnemyFactory.get_ogre_enemy(x,y,self,health=100, is_active = i <= 2))
+            self.enemy_list.append(EnemyFactory.get_ogre_enemy(x,y,self,is_active=i <= 3, health=200))
 
     def reload_platforms(self,param):
-        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_1)
+        print("Reloading platforms")
+        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_3)
 
     @abstractmethod
     def create_player(self):
@@ -74,28 +84,36 @@ class FormGameLevel1(Level):
     def create_victory(self):
         pass
 
-    def create_background(self):
-        return MovingBackground(constantes.LEVEL_1_BACKGROUND, self.surface, 3, 4)
+    def kill_boss(self, boss):
+        self.killed_boss = True
+        boss.is_active = False
+        self.score += 30
 
-    def update(self, lista_eventos,keys,delta_ms, player_list):
+    def update(self, lista_eventos,keys,delta_ms, player_list, boss):
+        if self.must_update_players:
+            Level.update_players(self)
+            self.must_update_players = False
         if not self.freeze():
             self.update_consumables(delta_ms, self.platform_list, player_list)
             self.update_enemies(delta_ms,player_list)
-
             for platform in self.platform_list:
                 platform.update()
-
+                
+            for bullet_element in self.bullet_list:
+                bullet_element.update(delta_ms,self.platform_list,self.enemy_list,player_list, boss)
+            
+            for interactable in self.interactable_list:
+                interactable.update(player_list)
+            
             for aux_widget in self.widget_list:
                 aux_widget.update(lista_eventos)
                 
-            for bullet_element in self.bullet_list:
-                bullet_element.update(delta_ms,self.platform_list,self.enemy_list,player_list)
-
         if not self.lost:
             self.check_loss()
         else:
             self.show_loss_screen()
-            self.loss_button.update(lista_eventos)
+            if self.loss_button:
+                self.loss_button.update(lista_eventos)
 
     def show_loss_screen(self):
         self.surface.fill(constantes.C_BLACK)
@@ -123,9 +141,9 @@ class FormGameLevel1(Level):
         self.master_surface.blit(title, (title_x, title_y))
         self.master_surface.blit(score, (score_x, score_y))
         if not self.loss_button:
-            self.loss_button = WidgetFactory.get_restart_button(self,300,300,function=Form.restart_form, parameter=self.name)
+            self.loss_button = WidgetFactory.get_restart_button(self,300,300, function=Form.restart_form, parameter=self.name)
         self.loss_button.draw()
-        
+
     def update_enemies(self,delta_ms, player_list):
         self.create_enemy_if_needed()
         for enemy_element in self.enemy_list:
@@ -133,7 +151,7 @@ class FormGameLevel1(Level):
 
 
     def create_enemy_if_needed(self):
-        if len(self.active_enemies()) < 3 and self.enemy_count < 7:
+        if len(self.active_enemies()) < 4 and self.enemy_count < self.max_enemies:
             self.activate_enemy()
 
     def activate_enemy(self):
@@ -201,7 +219,10 @@ class FormGameLevel1(Level):
         
         for consumable in self.consumable_list:
             consumable.draw(screen)
-
+        
+        for interactable in self.interactable_list:
+            interactable.draw(screen)
+            
         for aux_widget in self.widget_list:
             aux_widget.draw() 
 
@@ -225,6 +246,9 @@ class FormGameLevel1(Level):
 
     def player_shoot(self, bullet):
         self.bullet_list.append(bullet)
+
+    def boss_shoot(self,bullet):
+        self.bullet_list.append(bullet)
     
     def get_colliding_enemies(self, player):
         colliding_enemy_list = []
@@ -245,3 +269,8 @@ class FormGameLevel1(Level):
     def freeze(self):
         return self.has_won or self.is_paused
     
+    def on_click_shoot(self, parametro):
+        constantes.toggle_debug()
+        # for enemy_element in self.enemy_list:
+        #     self.bullet_list.append(Bullet(enemy_element,enemy_element.rect.centerx,enemy_element.rect.centery,self.player_1.rect.centerx,self.player_1.rect.centery,20,path="images/gui/set_gui_01/Comic_Border/Bars/Bar_Segment05.png",frame_rate_ms=100,move_rate_ms=20,width=5,height=5))
+

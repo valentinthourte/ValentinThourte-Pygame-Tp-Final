@@ -23,9 +23,12 @@ class FormGameLevel2_SP(FormGameLevel2):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
 
         self.create_victory()
+        self.added_score = False
         self.final_button = None
         self.can_activate_boss = False
         self.boss = None
+
+        self.next_level_button = WidgetFactory.get_next_level_button(self,300,300, Form.selected_type.format(3))
     
     def create_victory(self):
         self.victory = Victory(self, SINGLEPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 0, 200)
@@ -54,8 +57,8 @@ class FormGameLevel2_SP(FormGameLevel2):
 
         self.update_boss(delta_ms, player_list)
 
-        if self.final_button:
-            self.final_button.update(lista_eventos)
+        if self.next_level_button:
+            self.next_level_button.update(lista_eventos)
 
 
     def update_boss(self, delta_ms, player_list):
@@ -78,6 +81,7 @@ class FormGameLevel2_SP(FormGameLevel2):
         if self.can_win:
             self.victory.draw(screen=self.surface)
 
+
     
     def get_colliding_enemies(self, player):
         colliding_enemy_list = []
@@ -96,7 +100,11 @@ class FormGameLevel2_SP(FormGameLevel2):
             if CollisionHelper.player_colliding_with_entity(self.player_1, self.victory):
                 self.has_won = True
                 if self.victory.show_victory(self.surface):
-                    self.show_won_screen()
+                    self.show_won_screen()                    
+                    if not self.added_score:
+                        self.score += self.player_1.get_health()
+                        Level.add_score_to_players(self.score)
+                        self.added_score = True
 
     def show_won_screen(self):
         self.surface.fill(C_BLACK)
@@ -123,9 +131,7 @@ class FormGameLevel2_SP(FormGameLevel2):
         score = font.render(score_text, (score_x, score_y), C_RED)
         self.master_surface.blit(title, (title_x, title_y))
         self.master_surface.blit(score, (score_x, score_y))
-        if not self.final_button:
-            self.final_button = WidgetFactory.get_final_button(self,300,300, None)
-        self.final_button.draw()
+        self.next_level_button.draw()
         
 
     def check_can_win(self):

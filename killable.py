@@ -5,3 +5,5 @@ class Killable():
         
     def died(self):
         return self.lives <= 0
+    def reset_health(self):
+        self.lives = self.max_health

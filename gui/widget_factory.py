@@ -1,6 +1,7 @@
 from constantes import *
 from gui.gui_button import Button
 from gui.gui_form import Form
+from levels.level import Level
 
 
 class WidgetFactory:
@@ -18,7 +19,7 @@ class WidgetFactory:
     
     @staticmethod
     def get_final_button(master,x,y,parameter):
-        return Button(master,x,y, w=400, h=200,color_background=C_RED,color_border=C_BLACK, text="Quit", font=BLOOD_FONT_PATH,font_size=40,on_click=Form.quit, on_click_param=parameter)
+        return Button(master,x,y, w=400, h=200,color_background=C_RED,color_border=C_BLACK, text="Quit", font=BLOOD_FONT_PATH,font_size=40,on_click=Level.quit, on_click_param=parameter)
     
     @staticmethod
     def get_restart_button(master,x,y,function,parameter):

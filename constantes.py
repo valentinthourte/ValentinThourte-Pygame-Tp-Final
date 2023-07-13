@@ -11,7 +11,7 @@ DIRECTION_L = 0
 DIRECTION_R = 1
 GROUND_COLLIDE_H = 15 # Aprox Gravedad/2 + 1
 DEBUG = False
-DATABASE_NAME = "OrcPocalypse"
+DATABASE_NAME = "OrcoCalipsis.db"
 GAME_TITLE = "OrcoCalipsis"
 BOSS_DAMAGE = 50
 
@@ -47,7 +47,10 @@ PATH_COWGIRL_IMAGES = "images/caracters/players/cowgirl"
 PLAYER_ICON_PATH = "images/assets/player_icon.png"
 LEVEL_1_BACKGROUND = "images/locations/set_bg_03/01/game_background_1.png"
 LEVEL_2_BACKGROUND = "images/locations/set_bg_03/03/game_background_3.1.png"
+LEVEL_3_BACKGROUND = "images/locations/set_bg_05/3_game_background/3_game_background.png"
 FOOD_IMG_DIR = "images/assets/consumables/food"
+LEVEL_2_BOSS_IMG = "images/caracters/enemies/bosses/ork_axe"
+LEVEL_3_BOSS_IMG = "images/caracters/enemies/bosses/troll_stone_hammer"
 START_IMAGE_PATH = "images/gui/start-image/start_image.png"
 BLOOD_FONT_PATH = "images/assets/fonts/ConflictDripsPersonalUseBold-WyKXn.ttf"
 MUSIC_PATH = "images/assets/music/Platformer Underground Level Game Music - Royalty Free Music.mp3"
@@ -58,6 +61,7 @@ PLATFORM_WIDTH = 25
 NAME_FORM_MENU_B = "form_menu_B"
 START_MENU_NAME = "START_MENU"
 SETTINGS_MENU_NAME = "SETTINGS"
+RANKINGS_MENU_NAME = "RANKINGS"
 YOU_WIN_FORM_NAME = "YOU_WIN"
 PARTICLE_AMOUNT = 20
 GRAVITY_SPEED = 5
@@ -100,7 +104,18 @@ BOSS_ATTACK_INTERVAL = 1000
 # LEVEL_CONSTANTS
 LEVEL_1 = "L1"
 LEVEL_2 = "L2"
+LEVEL_3 = "L3"
 
 LEFT_PLATFORM_TYPE = 12
 CENTER_PLATFORM_TYPE = 13
 RIGHT_PLATFORM_TYPE = 14
+
+# FILE CONSTANTS
+JSON_PLATFORMS_KEY = "platforms"
+JSON_PLATFORM_X_KEY = "start_x"
+JSON_PLATFORM_Y_KEY = "start_y"
+JSON_PLATFORM_DISTANCE_X_KEY = "distance_x"
+JSON_PLATFORM_DISTANCE_Y_KEY = "distance_y"
+JSON_PLATFORM_INNER_AMOUNT_KEY = "inner_block_amount"
+JSON_PLATFORM_TEXTURE_TYPE_KEY = "texture_type"
+JSON_PLATFORM_SPEED_KEY = "speed"

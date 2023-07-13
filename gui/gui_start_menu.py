@@ -4,20 +4,24 @@ from background import Background
 from constantes import *
 from gui.gui_form import Form
 from gui.gui_button import Button
+from gui.gui_textbox import TextBox
+from levels.level import Level
 
 class StartMenuForm(Form):
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
         self.create_background()
         self.create_text()
-        # self.boton_singleplayer = Button(master=self,x=20,y=140,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_next_form,on_click_param="L1_SP",text="JUGAR SINGLEPLAYER",font="Verdana",font_size=12,font_color=C_WHITE)
         button_w = 180 
         button_h = 50
         button_x = (ANCHO_VENTANA // 2) - button_w / 2 
         self.boton_singleplayer = Button(master=self,x=button_x,y=400,w=button_w,h=button_h,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_next_form,on_click_param="L1_SP",text="JUGAR SINGLEPLAYER",font="Verdana",font_size=12,font_color=C_WHITE)
         self.boton_multiplayer = Button(master=self,x=button_x,y=460,w=button_w,h=button_h,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_next_form,on_click_param="L1_MP",text="JUGAR MULTIPLAYER",font="Verdana",font_size=12,font_color=C_WHITE)
-
-        self.widget_list += [self.boton_singleplayer, self.boton_multiplayer]
+        text_w = 300
+        text_x = (ANCHO_VENTANA // 2) - text_w / 2 
+        self.name_input = TextBox(master=self,x=text_x,y=520,w=text_w,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_XL_08.png",text="Name",font="Verdana",font_size=30,font_color=C_BLACK)
+        self.ranking_button = Button(master=self,x=button_x,y=580,w=button_w,h=button_h,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_next_form,on_click_param=RANKINGS_MENU_NAME,text="Rankings",font="Verdana",font_size=12,font_color=C_WHITE)
+        self.widget_list += [self.boton_singleplayer, self.boton_multiplayer, self.name_input, self.ranking_button]
 
     def create_background(self):
         img = pygame.image.load(START_IMAGE_PATH)
@@ -41,6 +45,7 @@ class StartMenuForm(Form):
     def on_click_next_form(self, parametro):
         if "MP" in parametro:
             Form.selected_type.replace("SP","MP")
+        Level.player_names = [self.name_input._text]
         self.set_active(parametro)
 
     def update(self, lista_eventos,keys,delta_ms):

@@ -3,6 +3,12 @@ from constantes import *
 from particle import ParticleList
 
 class Fallable():
+    # Clase ancestra para manejar gravedad
+    # Es la encargada de aplicar aceleración hacia abajo sobre todas las entidades que heredan de ella
+    # La misma se encarga de verificar que la entidad puede seguir acelerando (no alcanzó velocidad terminal), y no está en contacto con el suelo
+    # Si se detecta que está en contacto con el suelo, la misma seteará su velocidad_y y aceleracion_y en 0
+    # Tambien se encarga de crear los rectangulos de colisión con el suelo para las entidades
+    
     def __init__(self):
         self.velocity_y = 0
         self.acceleration_y = 0
@@ -10,7 +16,6 @@ class Fallable():
         self.jumped = False
         self.fall_particle_list = ParticleList(self) 
         
-    
     def update_gravity(self):
         if (self.jumped or not self.is_grounded):
             if self.can_keep_accelerating():

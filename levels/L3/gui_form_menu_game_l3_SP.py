@@ -1,63 +1,72 @@
 import pygame
 from pygame.locals import *
 from constantes import *
-from gui.gui_form import Form
-from gui.gui_button import Button
-from gui.gui_textbox import TextBox
-from gui.gui_progressbar import ProgressBar
-from gui.gui_factory import GuiFactory
-from levels.l1.gui_form_menu_game_l1 import FormGameLevel1
+from levels.L3.gui_form_menu_game_l3 import FormGameLevel3
 from levels.level import Level
-from player import Player
 from enemigo import Enemy
-from plataforma import Plataform
 from background import Background
 from collision_helper import CollisionHelper
 from victory import Victory
-from player_factory import PlayerFactory
 from gui.widget_factory import WidgetFactory
 
-class FormGameLevel1_SP(FormGameLevel1):
+class FormGameLevel3_SP(FormGameLevel3):
     def __init__(self,name,master_surface,x,y,w,h,color_background,color_border,active):
         super().__init__(name,master_surface,x,y,w,h,color_background,color_border,active)
+
         self.create_victory()
         self.added_score = False
-        
-        self.next_level_button = WidgetFactory.get_next_level_button(self,300,300, Form.selected_type.format(2))
-
-
-    def create_player(self):
-        self.player_1 = PlayerFactory.get_player(1, 0, 400, self, PATH_COWGIRL_IMAGES, PLAYER_1_KEYS)
-        Level.player_list = [self.player_1]
-
+        self.final_button = None
+        self.can_activate_boss = False
+        self.boss = None
+    
     def create_victory(self):
         self.victory = Victory(self, SINGLEPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 0, 200)
+        # self.victory = Victory(self, MULTIPLAYER_VICTORY_IMAGE_PATH, 88, 463, 1400, 0, 200, scale=False)
+
     def on_click_boton1(self, parametro):
         self.set_active(parametro)
         
     def update(self, lista_eventos,keys,delta_ms, player_list = None):
-        if len(Level.player_list) == 0:
-            self.create_player()
+
+        if len(Level.player_list) > 0:
+            self.player_1 = Level.player_list[0]
+
         if not player_list:
             player_list = Level.player_list
 
-        super().update(lista_eventos,keys,delta_ms, player_list)
+        super().update(lista_eventos,keys,delta_ms, player_list, self.boss)
 
         self.check_victory()
-        self.check_loss()
 
-        if self.player_can_move():
+        if self.player_can_move(self.player_1):
             self.player_1.events(delta_ms,keys)
         self.player_1.update(delta_ms,self.platform_list)
         
         self.victory.update(delta_ms, plataform_list=self.platform_list)
-        if self.next_level_button:
-            self.next_level_button.update(lista_eventos)
 
+        self.update_boss(delta_ms, player_list)
+
+        if self.final_button:
+            self.final_button.update(lista_eventos)
+
+
+    def update_boss(self, delta_ms, player_list):
+        if self.boss_is_active():
+            if not self.boss:
+                self.boss = self.create_boss()
+                self.boss.activate()
+            self.boss.update(delta_ms,self.platform_list, player_list)
+        
+    def boss_is_active(self):
+        return len(self.enemy_list) <= 0 and self.can_activate_boss and not self.killed_boss
+    
     def draw(self): 
         super().draw()
         self.player_1.draw(self.surface)
         
+        if self.boss_is_active(): 
+            self.boss.draw(screen=self.surface)
+
         if self.can_win:
             self.victory.draw(screen=self.surface)
 
@@ -79,7 +88,7 @@ class FormGameLevel1_SP(FormGameLevel1):
             if CollisionHelper.player_colliding_with_entity(self.player_1, self.victory):
                 self.has_won = True
                 if self.victory.show_victory(self.surface):
-                    self.show_won_screen()
+                    self.show_won_screen()                    
                     if not self.added_score:
                         self.score += self.player_1.get_health()
                         Level.add_score_to_players(self.score)
@@ -110,11 +119,13 @@ class FormGameLevel1_SP(FormGameLevel1):
         score = font.render(score_text, (score_x, score_y), C_RED)
         self.master_surface.blit(title, (title_x, title_y))
         self.master_surface.blit(score, (score_x, score_y))
-        self.next_level_button.draw()
+        if not self.final_button:
+            self.final_button = WidgetFactory.get_final_button(self,300,300, None)
+        self.final_button.draw()
         
 
     def check_can_win(self):
-        self.can_win = len(self.enemy_list) == 0 
+        self.can_win = len(self.enemy_list) == 0 and self.killed_boss
 
     def get_sender_params(self):
         return {
@@ -122,8 +133,6 @@ class FormGameLevel1_SP(FormGameLevel1):
             "next": "2"
         }
 
-    def player_can_move(self):
-        return not self.player_1.is_dead and not self.freeze()
     
     def freeze(self):
         return self.has_won

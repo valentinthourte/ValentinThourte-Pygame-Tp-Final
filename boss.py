@@ -1,5 +1,3 @@
-
-
 from animatable import Animatable
 from attacker import Attacker
 from auxiliar import Auxiliar
@@ -9,9 +7,16 @@ from hammer import Hammer
 from killable import Killable
 from constantes import *
 from particle import ParticleList
+import random
 
 class Boss(Attacker,Killable, Animatable, Fallable):
-    def __init__(self, x,y,owner,frame_rate_ms,move_rate_ms, lives, is_active):
+    # Clase BOSS:
+    # Al ser capaz de atacar, morir, es animado y le afecta la gravedad, hereda de las clases ancestro "Attacker,Killable, Animatable, Fallable"
+    # Por su cuenta, es capaz de ejecutar 2 tipos de ataques, uno a rango y uno melee. Ambos se manejan en la funcion try_attack(), llamada desde el método update()
+    # Hay un 1% de chance por frame que el boss dispare una roca (ataque a rango). La misma es generada por el arma del boss (Hammer), que hereda de la clase Weapon
+    # Si no dispara, hay un 5% de posibilidades que ejecute un ataque melee, el cual verifica colision con el jugador y le indica que fue golpeado, pasandole el daño inflingido
+    # Al morir, le indica a su owner, el nivel en el que se encuentra, que fue asesinado, para que el mismo lleve a cabo las tareas que implica.
+    def __init__(self, x,y,owner,image_path,frame_rate_ms,move_rate_ms, lives, is_active, weapon_damage = 40, image_scale = 0.6):
         Attacker.__init__(self, BOSS_ATTACK_INTERVAL)
         Animatable.__init__(self)
         Killable.__init__(self, lives)
@@ -19,7 +24,7 @@ class Boss(Attacker,Killable, Animatable, Fallable):
         self.owner = owner
 
 
-        self.load_animations()
+        self.load_animations(image_path, image_scale)
 
         self.is_active = is_active
         self.frame = 0
@@ -39,26 +44,19 @@ class Boss(Attacker,Killable, Animatable, Fallable):
         self.frame_rate_ms = frame_rate_ms 
         self.tiempo_transcurrido_move = 0
         self.move_rate_ms = move_rate_ms
-        self.weapon = Hammer(self, 40)
+        self.weapon = Hammer(self, weapon_damage)
 
         Fallable.create_ground_collition_rect(self)
         self.health_bar_width = 400
         self.health_bar_height = 20
         self.particle_list = ParticleList(self)
 
-    def load_animations(self):
-        p_scale = 0.6
-        self.walk_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/bosses/troll_stone_hammer/WALK/WALK_00{0}.png",0,7,flip=True,scale=p_scale)
-        self.stay_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/bosses/troll_stone_hammer/IDLE/IDLE_00{0}.png",0,7,flip=True,scale=p_scale)
-        self.knife_l = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/bosses/troll_stone_hammer/ATTAK/ATTAK_00{0}.png",0,7,flip=True,scale=p_scale)
-        self.die = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/bosses/troll_stone_hammer/DIE/DIE_00{0}.png",0,6,scale=p_scale)
-        self.hurt = Auxiliar.getSurfaceFromSeparateFiles("images/caracters/enemies/bosses/troll_stone_hammer/HURT/HURT_00{0}.png",0,7,flip=True,scale=p_scale)
-        # w = 491 
-        # h = 417
-        # lista = [self.stay_l, self.knife_l,self.hurt,self.die]
-        # for animation in lista:
-        #     for i in range(len(animation)):
-        #         pygame.transform.scale(animation[i], (w,h))
+    def load_animations(self, image_path, image_scale = 0.6):
+        self.walk_l = Auxiliar.getSurfaceFromSeparateFiles(image_path +"/WALK/WALK_00{0}.png",0,7,flip=True,scale=image_scale)
+        self.stay_l = Auxiliar.getSurfaceFromSeparateFiles(image_path + "/IDLE/IDLE_00{0}.png",0,7,flip=True,scale=image_scale)
+        self.knife_l = Auxiliar.getSurfaceFromSeparateFiles(image_path + "/ATTAK/ATTAK_00{0}.png",0,7,flip=True,scale=image_scale)
+        self.die = Auxiliar.getSurfaceFromSeparateFiles(image_path + "/DIE/DIE_00{0}.png",0,6,scale=image_scale)
+        self.hurt = Auxiliar.getSurfaceFromSeparateFiles(image_path + "/HURT/HURT_00{0}.png",0,7,flip=True,scale=image_scale)
 
     def do_animation(self,delta_ms):
         if self.is_dead and self.animation_ended():
@@ -135,7 +133,6 @@ class Boss(Attacker,Killable, Animatable, Fallable):
         pygame.draw.rect(screen, (0, 255, 0), (health_bar_x, health_bar_y, green_width, self.health_bar_height))
     
     def try_attack(self, player_list):
-        import random
         number = random.randint(1,100)
         if number <= 3:
             self.shoot()

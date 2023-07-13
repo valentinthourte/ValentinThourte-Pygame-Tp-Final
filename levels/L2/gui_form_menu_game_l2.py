@@ -32,11 +32,9 @@ class FormGameLevel2(Level):
         
 
         # --- GUI WIDGET --- 
-        self.boton1 = Button(master=self,x=0,y=0,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_boton1,on_click_param="form_menu_B",text="BACK",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
-        self.boton2 = Button(master=self,x=200,y=0,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_boton1,on_click_param="form_menu_B",text="PAUSE",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
-        self.boton_shoot = Button(master=self,x=400,y=0,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.on_click_shoot,on_click_param="form_menu_B",text="SHOOT",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
-       
-        self.widget_list = [self.boton1,self.boton2,self.boton_shoot]
+        self.reload_platforms_button = Button(master=self,x=300,y=10,w=140,h=50,color_background=None,color_border=None,image_background="images/gui/set_gui_01/Comic_Border/Buttons/Button_M_02.png",on_click=self.reload_platforms,on_click_param="form_menu_B",text="Reload Platforms",font="Verdana",font_size=30,font_color=constantes.C_WHITE)
+
+        self.widget_list = [self.reload_platforms_button]
 
         self.life_bar = pygame.image.load("images/assets/vida.png")
         self.life_line = pygame.image.load("images/assets/vida_verde_2.png")
@@ -50,6 +48,7 @@ class FormGameLevel2(Level):
         self.loss_button = None
 
 
+        self.score = 0
         
         self.killed_boss = False
 
@@ -70,13 +69,17 @@ class FormGameLevel2(Level):
     def create_boss(self):
         boss_x = 800
         boss_y = 300
-        return Boss(boss_x,boss_y,self,100,50,600,False)
+        return Boss(boss_x,boss_y,self, constantes.LEVEL_2_BOSS_IMG, 100,50,600,False, 75, image_scale=0.3)
     
     def create_enemies(self):
         self.enemy_list = []
         for i in range(7):
             x,y = self.get_coords_for_new_entity()
             self.enemy_list.append(EnemyFactory.get_ogre_enemy(x,y,self,is_active=i <= 2, health=150))
+
+    def reload_platforms(self,param):
+        print("Reloading platforms")
+        self.platform_list = PlatformHelper.get_platforms_for_level(constantes.LEVEL_2)
 
     @abstractmethod
     def create_player(self):
@@ -92,6 +95,7 @@ class FormGameLevel2(Level):
     def kill_boss(self, boss):
         self.killed_boss = True
         boss.is_active = False
+        self.score += 30
 
     def update(self, lista_eventos,keys,delta_ms, player_list, boss):
         if self.must_update_players:
@@ -200,6 +204,7 @@ class FormGameLevel2(Level):
 
     def destroy_consumable(self, consumable):
         self.consumable_list.remove(consumable)
+        self.score += 1
     
     def draw(self): 
         if constantes.DEBUG:
@@ -224,6 +229,9 @@ class FormGameLevel2(Level):
         
         for interactable in self.interactable_list:
             interactable.draw(screen)
+            
+        for aux_widget in self.widget_list:
+            aux_widget.draw() 
 
         self.draw_life_bars(screen)
 
@@ -260,6 +268,7 @@ class FormGameLevel2(Level):
     def kill_enemy(self, enemy: Enemy):
         self.enemy_list.remove(enemy)
         self.enemy_count += 1
+        self.score += 1
     
     def player_can_move(self, player):
         return not player.is_dead and not self.freeze()

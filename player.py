@@ -11,14 +11,14 @@ from pistol import Pistol
 
 class Player(Fallable, Attacker, Animatable, Killable):
 
-    def __init__(self,id,x,y,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100, lives = 182) -> None:
+    def __init__(self,id,x,y, name,speed_walk,speed_run,gravity,jump_power,frame_rate_ms,move_rate_ms,jump_height, owner, images_path, player_keys, p_scale=1,interval_time_jump=100, lives = 182) -> None:
         Fallable.__init__(self)
         Attacker.__init__(self, PLAYER_SHOOT_INTERVAL)
         Animatable.__init__(self)
         Killable.__init__(self, lives=lives)
 
         self.id = id
-
+        self.name = name
         self.stay_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Idle ({0}).png",1,10,flip=False,scale=p_scale)
         self.stay_l = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Idle ({0}).png",1,10,flip=True,scale=p_scale)
         self.jump_r = Auxiliar.getSurfaceFromSeparateFiles(images_path + "/Jump ({0}).png",1,10,flip=False,scale=p_scale)
@@ -38,7 +38,8 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.score = 0
         self.move_x = 0
 
-        self.weapon = Pistol(self,45)
+        # self.weapon = Pistol(self,45)
+        self.weapon = Pistol(self,900)
         self.score = 0
         
         self.velocity_y = 0
@@ -78,6 +79,9 @@ class Player(Fallable, Attacker, Animatable, Killable):
         self.owner = owner
         self.player_keys = player_keys
 
+    def set_name(self, name):
+        self.name = name
+        
     def generate_player_color(self):
         import random
         r = random.randint(50, 200)
@@ -88,12 +92,28 @@ class Player(Fallable, Attacker, Animatable, Killable):
     def reset_coords(self):
         self.set_x(self.starting_x)
         # self.set_y(self.starting_y)
-
+    
+    def reset(self):
+        self.reset_coords()
+        self.reset_health()
+        self.reset_damage()
+    def get_health(self):
+        return self.lives
+    
     def increase_damage(self, percent):
         self.weapon.increase_damage(percent)
 
     def reset_damage(self):
         self.weapon.reset_damage()
+
+    def increase_score(self, score):
+        self.score += score
+    
+    def get_name(self):
+        return self.name
+
+    def get_score(self):
+        return self.score
 
     def walk(self,direction):
         if(self.direction != direction or (self.animation != self.walk_r and self.animation != self.walk_l)):
@@ -121,6 +141,7 @@ class Player(Fallable, Attacker, Animatable, Killable):
                     self.animation = self.shoot_l
                 self.owner.player_shoot(self.weapon.shoot(self.direction))
                 
+
     def receive_shoot(self, damage = 1):
         self.lives -= damage
         self.particle_list.create_hit_particle()
@@ -260,8 +281,6 @@ class Player(Fallable, Attacker, Animatable, Killable):
         image = pygame.image.load(PLAYER_ICON_PATH).convert_alpha()
         image_width = image.get_width()
         image_height = image.get_height()
-
-
 
         icon_x = self.rect.left + self.rect.width // 2
         icon_y = self.rect.top

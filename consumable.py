@@ -4,6 +4,12 @@ from constantes import *
 from fallable import Fallable
 
 class Consumable(Fallable):
+    # Clase CONSUMABLE
+    # Utilizada para encapsular la lógica correspondiente a entidades consumibles, es decir, que colisionan con un jugador y surten un efecto sobre el mismo.
+    # Contiene lógica para determinar si fue consumida (si un jugador colisionó), para eliminarse una vez que su efecto fue surtido
+    # Esta clase también hereda de Fallable, el cual se encarga de aplicar gravedad y colisión con el suelo a las entidades
+    # También contiene lógica para el movimiento tipo flotación cuando queda en contacto con el suelo
+    
     def __init__(self, x, y, image_path, w, h, owner, scale=True,frame_rate_ms = 100,move_rate_ms = 50, float_height = 10) -> None:
         Fallable.__init__(self)
         self.image = pygame.image.load(image_path).convert_alpha()
